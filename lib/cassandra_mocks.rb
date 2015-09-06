@@ -14,6 +14,7 @@
 # limitations under the License.
 #++
 
+require 'cassandra_mocks/table'
 require 'cassandra_mocks/keyspace'
 require 'cassandra_mocks/cluster'
 require 'cassandra_mocks/session'
