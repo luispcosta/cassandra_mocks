@@ -7,6 +7,7 @@ if ENV['COVERAGE'].to_i > 0
 end
 
 require 'bundler'
+require 'cassandra'
 Bundler.require(:default, :development, :test)
 Dir['./spec/helpers/**.rb'].each { |file| require file }
 Dir['./spec/shared_examples/**.rb'].each { |file| require file }
