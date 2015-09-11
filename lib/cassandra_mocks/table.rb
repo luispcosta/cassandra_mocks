@@ -9,11 +9,8 @@ module Cassandra
       end
 
       def insert(attributes)
-        attributes.keys.each do |column|
-          unless column_names.include?(column)
-            raise Errors::InvalidError.new("Invalid column, #{column}, specified", 'MockStatement')
-          end
-        end
+        validate_columns!(attributes)
+        validate_primary_key_presence!(attributes)
 
         rows << attributes
       end
@@ -23,6 +20,32 @@ module Cassandra
       end
 
       private
+
+      def validate_columns!(attributes)
+        attributes.keys.each do |column|
+          unless column_names.include?(column)
+            raise Errors::InvalidError.new("Invalid column, #{column}, specified", 'MockStatement')
+          end
+        end
+      end
+
+      def validate_primary_key_presence!(attributes)
+        primary_key_names.each do |column|
+          raise Errors::InvalidError.new("Invalid null primary key part, #{column}", 'MockStatement') unless attributes[column]
+        end
+      end
+
+      def primary_key_names
+        partition_key_names + clustering_key_names
+      end
+
+      def partition_key_names
+        partition_key.map(&:name)
+      end
+
+      def clustering_key_names
+        clustering_columns.map(&:name)
+      end
 
       def column_names
         columns.map(&:name)

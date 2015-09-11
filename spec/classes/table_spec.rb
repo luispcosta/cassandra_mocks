@@ -38,7 +38,7 @@ module Cassandra
       end
 
       describe '#insert' do
-        let(:attributes) { { 'pk1' => 15, 'ck1' => 'hello world' } }
+        let(:attributes) { {'pk1' => 15, 'ck1' => 'hello world'} }
 
         it 'should create a record from the input row' do
           subject.insert(attributes)
@@ -46,7 +46,7 @@ module Cassandra
         end
 
         context 'with multiple records' do
-          let(:other_attributes) { { 'pk1' => 45, 'ck1' => 'goodbye', 'field1' => 'world' } }
+          let(:other_attributes) { {'pk1' => 45, 'ck1' => 'goodbye', 'field1' => 'world'} }
 
           it 'should be able to store multiple records' do
             subject.insert(attributes)
@@ -56,20 +56,37 @@ module Cassandra
         end
 
         context 'with a record containing invalid columns' do
-          let(:attributes) { { 'pk1' => 15, 'ck1' => 'hello world', 'field2' => 'stuff' } }
+          let(:attributes) { {'pk1' => 15, 'ck1' => 'hello world', 'field2' => 'stuff'} }
 
           it 'should raise an error' do
             expect { subject.insert(attributes) }.to raise_error(Cassandra::Errors::InvalidError, 'Invalid column, field2, specified')
           end
 
           context 'with an additional invalid column' do
-            let(:attributes) { { 'field3' => 'garbage', 'pk1' => 15, 'ck1' => 'hello world', 'field2' => 'stuff' } }
+            let(:attributes) { {'field3' => 'garbage', 'pk1' => 15, 'ck1' => 'hello world', 'field2' => 'stuff'} }
 
             it 'should raise the error on the first invalid column found' do
               expect { subject.insert(attributes) }.to raise_error(Cassandra::Errors::InvalidError, 'Invalid column, field3, specified')
             end
           end
         end
+
+        context 'when missing a part of the primary key' do
+          let(:attributes) { {'ck1' => 'hello world'} }
+
+          it 'should raise the error on the first invalid column found' do
+            expect { subject.insert(attributes) }.to raise_error(Cassandra::Errors::InvalidError, 'Invalid null primary key part, pk1')
+          end
+
+          context 'with different missing attributes' do
+            let(:attributes) { {'pk1' => 53, 'ck1' => nil} }
+
+            it 'should raise the error on the first invalid column found' do
+              expect { subject.insert(attributes) }.to raise_error(Cassandra::Errors::InvalidError, 'Invalid null primary key part, ck1')
+            end
+          end
+        end
+
       end
 
     end
