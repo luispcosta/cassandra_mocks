@@ -6,7 +6,6 @@ group :development do
   gem 'rdoc'
   gem 'cassandra-driver', '~> 1.1', require: 'cassandra'
   gem 'activesupport', require: 'active_support/all'
-  require 'active_support/core_ext/class/attribute_accessors'
 end
 
 group :test do

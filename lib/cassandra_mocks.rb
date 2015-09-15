@@ -14,6 +14,7 @@
 # limitations under the License.
 #++
 
+require 'active_support/core_ext/class/attribute_accessors'
 require 'cassandra_mocks/table'
 require 'cassandra_mocks/keyspace'
 require 'cassandra_mocks/cluster'
