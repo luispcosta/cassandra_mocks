@@ -22,13 +22,7 @@ module Cassandra
           validate_clustering_column_filter!(filter)
         end
 
-        selected_rows = if filter
-                          rows.select { |row| row.slice(*filter.keys) == filter }
-                        else
-                          rows
-                        end
-
-        selected_rows.map do |row|
+        filtered_rows(filter).map do |row|
           (columns.first == '*') ? row : row.slice(*columns)
         end
       end
@@ -67,6 +61,14 @@ module Cassandra
 
       def filter_has_column?(filter, column)
         filter[column]
+      end
+
+      def filtered_rows(filter)
+        filter ? apply_filter(filter) : rows
+      end
+
+      def apply_filter(filter)
+        rows.select { |row| row.slice(*filter.keys) == filter }
       end
 
       def validate_partion_key_filter!(filter)
