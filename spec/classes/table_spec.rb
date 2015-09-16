@@ -89,6 +89,39 @@ module Cassandra
 
       end
 
+      describe '#select' do
+        let(:attributes) { {'pk1' => 'partition', 'ck1' => 'clustering', 'field1' => 'some extra data'} }
+        before { subject.insert(attributes) }
+
+        it 'should return a list of all records inserted into the table' do
+          expect(subject.select('*')).to eq([attributes])
+        end
+
+        context 'with multiple rows' do
+          let(:attributes) { {'pk1' => 'other partition', 'ck1' => 'clustering'} }
+          let(:other_attributes) { {'pk1' => 'other partition', 'ck1' => 'other clustering'} }
+
+          before { subject.insert(other_attributes) }
+
+          it 'should return all of the inserted rows' do
+            expect(subject.select('*')).to match_array([attributes, other_attributes])
+          end
+        end
+
+        context 'when selecting a specific column' do
+          it 'should return on the key value pair for that column' do
+            expect(subject.select('pk1')).to eq(['pk1' => 'partition'])
+          end
+
+          context 'when selecting multiple columns' do
+            it 'should return on the key value pair for that column' do
+              expect(subject.select('ck1', 'field1')).to eq(['ck1' => 'clustering', 'field1' => 'some extra data'])
+            end
+          end
+        end
+
+      end
+
     end
   end
 end

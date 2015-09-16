@@ -15,6 +15,12 @@ module Cassandra
         rows << attributes
       end
 
+      def select(*columns)
+        rows.map do |row|
+          (columns.first == '*') ? row : row.slice(*columns)
+        end
+      end
+
       def rows
         @rows ||= []
       end
