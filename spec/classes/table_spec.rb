@@ -59,14 +59,14 @@ module Cassandra
           let(:attributes) { {'pk1' => 15, 'ck1' => 'hello world', 'field2' => 'stuff'} }
 
           it 'should raise an error' do
-            expect { subject.insert(attributes) }.to raise_error(Cassandra::Errors::InvalidError, 'Invalid column, field2, specified')
+            expect { subject.insert(attributes) }.to raise_error(Cassandra::Errors::InvalidError, 'Invalid column, "field2", specified')
           end
 
           context 'with an additional invalid column' do
             let(:attributes) { {'field3' => 'garbage', 'pk1' => 15, 'ck1' => 'hello world', 'field2' => 'stuff'} }
 
             it 'should raise the error on the first invalid column found' do
-              expect { subject.insert(attributes) }.to raise_error(Cassandra::Errors::InvalidError, 'Invalid column, field3, specified')
+              expect { subject.insert(attributes) }.to raise_error(Cassandra::Errors::InvalidError, 'Invalid column, "field3", specified')
             end
           end
         end
@@ -75,14 +75,14 @@ module Cassandra
           let(:attributes) { {'ck1' => 'hello world'} }
 
           it 'should raise the error on the first invalid column found' do
-            expect { subject.insert(attributes) }.to raise_error(Cassandra::Errors::InvalidError, 'Invalid null primary key part, pk1')
+            expect { subject.insert(attributes) }.to raise_error(Cassandra::Errors::InvalidError, 'Invalid null primary key part, "pk1"')
           end
 
           context 'with different missing attributes' do
             let(:attributes) { {'pk1' => 53, 'ck1' => nil} }
 
             it 'should raise the error on the first invalid column found' do
-              expect { subject.insert(attributes) }.to raise_error(Cassandra::Errors::InvalidError, 'Invalid null primary key part, ck1')
+              expect { subject.insert(attributes) }.to raise_error(Cassandra::Errors::InvalidError, 'Invalid null primary key part, "ck1"')
             end
           end
         end
@@ -171,18 +171,18 @@ module Cassandra
             end
 
             it 'should raise an error if only specifying part of the partition key' do
-              expect { (subject.select('*', {'pk1' => 'partition'})) }.to raise_error(Cassandra::Errors::InvalidError, 'Missing partition key part(s) pk2')
+              expect { (subject.select('*', {'pk1' => 'partition'})) }.to raise_error(Cassandra::Errors::InvalidError, 'Missing partition key part(s) "pk2"')
             end
 
             context 'with a different part missing' do
               it 'should raise an error' do
-                expect { (subject.select('*', {'pk2' => 'additional partition'})) }.to raise_error(Cassandra::Errors::InvalidError, 'Missing partition key part(s) pk1')
+                expect { (subject.select('*', {'pk2' => 'additional partition'})) }.to raise_error(Cassandra::Errors::InvalidError, 'Missing partition key part(s) "pk1"')
               end
             end
 
             context 'with both parts missing' do
               it 'should raise an error' do
-                expect { (subject.select('*', {'ck1' => 'clustering'})) }.to raise_error(Cassandra::Errors::InvalidError, 'Missing partition key part(s) pk1, pk2')
+                expect { (subject.select('*', {'ck1' => 'clustering'})) }.to raise_error(Cassandra::Errors::InvalidError, 'Missing partition key part(s) "pk1", "pk2"')
               end
             end
           end
@@ -199,7 +199,7 @@ module Cassandra
             it 'should raise an error if earlier clustering keys are not restricted' do
               expect do
                 subject.select('*', {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck2' => 'additional clustering 1'})
-              end.to raise_error(Cassandra::Errors::InvalidError, 'Clustering key part(s) ck1 must be restricted')
+              end.to raise_error(Cassandra::Errors::InvalidError, 'Clustering key part(s) "ck1" must be restricted')
             end
 
             context 'with a different set of clustering columns' do
@@ -220,7 +220,7 @@ module Cassandra
               it 'should raise an error if earlier clustering keys are not restricted' do
                 expect do
                   subject.select('*', {'pk1' => 'partition 2', 'cluster3' => 'additional clustering 1'})
-                end.to raise_error(Cassandra::Errors::InvalidError, 'Clustering key part(s) cluster1, cluster2 must be restricted')
+                end.to raise_error(Cassandra::Errors::InvalidError, 'Clustering key part(s) "cluster1", "cluster2" must be restricted')
               end
             end
 

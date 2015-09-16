@@ -19,13 +19,13 @@ module Cassandra
         filter = columns.pop if columns.last.is_a?(Hash)
         if filter
           missing_partition_keys = Set.new(partition_key_names) - filter.keys
-          raise Cassandra::Errors::InvalidError.new("Missing partition key part(s) #{missing_partition_keys.to_a * ', '}", 'MockStatement') unless missing_partition_keys.empty?
+          raise Cassandra::Errors::InvalidError.new("Missing partition key part(s) #{missing_partition_keys.map(&:inspect) * ', '}", 'MockStatement') unless missing_partition_keys.empty?
 
           hit_column = true
           prev_columns = []
           clustering_key_names.each do |column|
             if filter[column]
-              raise Cassandra::Errors::InvalidError.new("Clustering key part(s) #{prev_columns * ', '} must be restricted", 'MockStatement') unless hit_column
+              raise Cassandra::Errors::InvalidError.new("Clustering key part(s) #{prev_columns.map(&:inspect) * ', '} must be restricted", 'MockStatement') unless hit_column
             else
               hit_column = false
               prev_columns << column
@@ -53,14 +53,14 @@ module Cassandra
       def validate_columns!(attributes)
         attributes.keys.each do |column|
           unless column_names.include?(column)
-            raise Errors::InvalidError.new("Invalid column, #{column}, specified", 'MockStatement')
+            raise Errors::InvalidError.new(%Q{Invalid column, "#{column}", specified}, 'MockStatement')
           end
         end
       end
 
       def validate_primary_key_presence!(attributes)
         primary_key_names.each do |column|
-          raise Errors::InvalidError.new("Invalid null primary key part, #{column}", 'MockStatement') unless attributes[column]
+          raise Errors::InvalidError.new(%Q{Invalid null primary key part, "#{column}"}, 'MockStatement') unless attributes[column]
         end
       end
 
