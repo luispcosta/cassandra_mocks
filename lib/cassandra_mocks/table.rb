@@ -81,14 +81,18 @@ module Cassandra
         raise Cassandra::Errors::InvalidError.new("Missing partition key part(s) #{missing_partition_keys.map(&:inspect) * ', '}", 'MockStatement') unless missing_partition_keys.empty?
       end
 
-      def compare_rows(index, lhs, rhs)
-        return 0 if primary_key_names[index].nil?
+      def compare_rows(primary_key_index, lhs, rhs)
+        return 0 if primary_key_names[primary_key_index].nil?
 
-        if lhs[primary_key_names[index]] == rhs[primary_key_names[index]]
-          compare_rows(index + 1, lhs, rhs)
+        if primary_key_part(lhs, primary_key_index) == primary_key_part(rhs, primary_key_index)
+          compare_rows(primary_key_index + 1, lhs, rhs)
         else
-          lhs[primary_key_names[index]] <=> rhs[primary_key_names[index]]
+          primary_key_part(lhs, primary_key_index) <=> primary_key_part(rhs, primary_key_index)
         end
+      end
+
+      def primary_key_part(row, primary_key_index)
+        row[primary_key_names[primary_key_index]]
       end
 
       def primary_key_names
