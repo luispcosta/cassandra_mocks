@@ -18,14 +18,23 @@ module Cassandra
       def select(*columns)
         filter = columns.pop if columns.last.is_a?(Hash)
         if filter
-          missing = Set.new(partition_key_names) - filter.keys
-          raise Cassandra::Errors::InvalidError.new("Missing partition key part(s) #{missing.to_a * ', '}", 'MockStatement') unless missing.empty?
+          missing_partition_keys = Set.new(partition_key_names) - filter.keys
+          raise Cassandra::Errors::InvalidError.new("Missing partition key part(s) #{missing_partition_keys.to_a * ', '}", 'MockStatement') unless missing_partition_keys.empty?
+
+          hit_column = true
+          prev_columns = []
+          clustering_key_names.each do |column|
+            if filter[column]
+              raise Cassandra::Errors::InvalidError.new("Clustering key part(s) #{prev_columns * ', '} must be restricted", 'MockStatement') unless hit_column
+            else
+              hit_column = false
+              prev_columns << column
+            end
+          end
         end
 
         selected_rows = if filter
-                          rows.select do |row|
-                            row.slice(*filter.keys) == filter
-                          end
+                          rows.select { |row| row.slice(*filter.keys) == filter }
                         else
                           rows
                         end

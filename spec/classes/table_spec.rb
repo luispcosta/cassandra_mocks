@@ -129,21 +129,26 @@ module Cassandra
           end
           let(:partition_key) { [pk_part_one, pk_part_two] }
           let(:clustering_key) { [ck_part_one, ck_part_two] }
-
-          before do
-            (1..2).each do |pk1|
-              (1..2).each do |pk2|
-                (1..2).each do |ck1|
-                  (1..2).each do |ck2|
-                    subject.insert({
-                                       'pk1' => "partition #{pk1}",
-                                       'pk2' => "additional partition #{pk2}",
-                                       'ck1' => "clustering #{ck1}",
-                                       'ck2' => "additional clustering #{ck2}",
-                                   })
+          let(:list_of_attributes) do
+            (1..2).map do |pk1|
+              (1..2).map do |pk2|
+                (1..2).map do |ck1|
+                  (1..2).map do |ck2|
+                    {
+                        'pk1' => "partition #{pk1}",
+                        'pk2' => "additional partition #{pk2}",
+                        'ck1' => "clustering #{ck1}",
+                        'ck2' => "additional clustering #{ck2}",
+                    }
                   end
                 end
               end
+            end.flatten
+          end
+
+          before do
+            list_of_attributes.each do |attributes|
+              subject.insert(attributes)
             end
           end
 
@@ -189,6 +194,34 @@ module Cassandra
                   {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2'},
               ]
               expect(subject.select('*', {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1'})).to eq(expected_results)
+            end
+
+            it 'should raise an error if earlier clustering keys are not restricted' do
+              expect do
+                subject.select('*', {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck2' => 'additional clustering 1'})
+              end.to raise_error(Cassandra::Errors::InvalidError, 'Clustering key part(s) ck1 must be restricted')
+            end
+
+            context 'with a different set of clustering columns' do
+              let(:attributes) do
+                {'pk1' => 'other partition',
+                 'cluster1' => 'clustering',
+                 'cluster2' => 'additional clustering 1',
+                 'cluster3' => 'additional clustering 2'}
+              end
+              let(:list_of_attributes) { [] }
+
+              let(:ck_part_one) { Cassandra::Column.new('cluster1', 'string', :desc) }
+              let(:ck_part_two) { Cassandra::Column.new('cluster2', 'string', :desc) }
+              let(:ck_part_three) { Cassandra::Column.new('cluster3', 'string', :desc) }
+              let(:partition_key) { [pk_part_one] }
+              let(:clustering_key) { [ck_part_one, ck_part_two, ck_part_three] }
+
+              it 'should raise an error if earlier clustering keys are not restricted' do
+                expect do
+                  subject.select('*', {'pk1' => 'partition 2', 'cluster3' => 'additional clustering 1'})
+                end.to raise_error(Cassandra::Errors::InvalidError, 'Clustering key part(s) cluster1, cluster2 must be restricted')
+              end
             end
 
             context 'with multiple clustering columns specified' do
