@@ -22,7 +22,12 @@ module Cassandra
           validate_clustering_column_filter!(filter)
         end
 
-        filtered_rows(filter).map do |row|
+        filtered_rows = filtered_rows(filter)
+        sorted_rows = filtered_rows.sort do |lhs, rhs|
+          compare_rows(0, lhs, rhs)
+        end
+
+        sorted_rows.map do |row|
           (columns.first == '*') ? row : row.slice(*columns)
         end
       end
@@ -74,6 +79,16 @@ module Cassandra
       def validate_partion_key_filter!(filter)
         missing_partition_keys = Set.new(partition_key_names) - filter.keys
         raise Cassandra::Errors::InvalidError.new("Missing partition key part(s) #{missing_partition_keys.map(&:inspect) * ', '}", 'MockStatement') unless missing_partition_keys.empty?
+      end
+
+      def compare_rows(index, lhs, rhs)
+        return 0 if primary_key_names[index].nil?
+
+        if lhs[primary_key_names[index]] == rhs[primary_key_names[index]]
+          compare_rows(index + 1, lhs, rhs)
+        else
+          lhs[primary_key_names[index]] <=> rhs[primary_key_names[index]]
+        end
       end
 
       def primary_key_names

@@ -108,6 +108,56 @@ module Cassandra
           end
         end
 
+        describe 'sorting' do
+          let(:attributes) do
+            {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 3'}
+          end
+          let(:partition_key) { [pk_part_one, pk_part_two] }
+          let(:clustering_key) { [ck_part_one, ck_part_two] }
+
+          it 'should sort by partition key, then by clustering columns' do
+            subject.insert({'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'})
+            expected_results = [
+                {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'},
+                {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 3'},
+            ]
+            expect(subject.select('*')).to eq(expected_results)
+          end
+
+          context 'when the first partition part is in order, by the second is not' do
+            it 'should sort by partition key, then by clustering columns' do
+              subject.insert({'pk1' => 'partition 3', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'})
+              expected_results = [
+                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'},
+                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 3'},
+              ]
+              expect(subject.select('*')).to eq(expected_results)
+            end
+          end
+
+          context 'when the partition key is in order, by the clustering columns are not' do
+            it 'should sort by partition key, then by clustering columns' do
+              subject.insert({'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'})
+              expected_results = [
+                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'},
+                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 3'},
+              ]
+              expect(subject.select('*')).to eq(expected_results)
+            end
+          end
+
+          context 'when the first clustering column is in order, but the second is not' do
+            it 'should sort by partition key, then by clustering columns' do
+              subject.insert({'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 2'})
+              expected_results = [
+                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 2'},
+                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 3'},
+              ]
+              expect(subject.select('*')).to eq(expected_results)
+            end
+          end
+        end
+
         context 'when selecting a specific column' do
           it 'should return on the key value pair for that column' do
             expect(subject.select('pk1')).to eq(['pk1' => 'partition'])
