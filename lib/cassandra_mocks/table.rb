@@ -16,7 +16,21 @@ module Cassandra
       end
 
       def select(*columns)
-        rows.map do |row|
+        filter = columns.pop if columns.last.is_a?(Hash)
+        if filter
+          missing = Set.new(partition_key_names) - filter.keys
+          raise Cassandra::Errors::InvalidError.new("Missing partition key part(s) #{missing.to_a * ', '}", 'MockStatement') unless missing.empty?
+        end
+
+        selected_rows = if filter
+                          rows.select do |row|
+                            row.slice(*partition_key_names) == filter.slice(*partition_key_names)
+                          end
+                        else
+                          rows
+                        end
+
+        selected_rows.map do |row|
           (columns.first == '*') ? row : row.slice(*columns)
         end
       end
