@@ -18,19 +18,8 @@ module Cassandra
       def select(*columns)
         filter = columns.pop if columns.last.is_a?(Hash)
         if filter
-          missing_partition_keys = Set.new(partition_key_names) - filter.keys
-          raise Cassandra::Errors::InvalidError.new("Missing partition key part(s) #{missing_partition_keys.map(&:inspect) * ', '}", 'MockStatement') unless missing_partition_keys.empty?
-
-          hit_column = true
-          prev_columns = []
-          clustering_key_names.each do |column|
-            if filter[column]
-              raise Cassandra::Errors::InvalidError.new("Clustering key part(s) #{prev_columns.map(&:inspect) * ', '} must be restricted", 'MockStatement') unless hit_column
-            else
-              hit_column = false
-              prev_columns << column
-            end
-          end
+          validate_partion_key_filter!(filter)
+          validate_clustering_column_filter!(filter)
         end
 
         selected_rows = if filter
@@ -60,8 +49,29 @@ module Cassandra
 
       def validate_primary_key_presence!(attributes)
         primary_key_names.each do |column|
-          raise Errors::InvalidError.new(%Q{Invalid null primary key part, "#{column}"}, 'MockStatement') unless attributes[column]
+          raise Errors::InvalidError.new(%Q{Invalid null primary key part, "#{column}"}, 'MockStatement') unless filter_has_column?(attributes, column)
         end
+      end
+
+      def validate_clustering_column_filter!(filter)
+        prev_columns = []
+        clustering_key_names.inject(true) do |hit_column, column|
+          if filter_has_column?(filter, column)
+            raise Cassandra::Errors::InvalidError.new("Clustering key part(s) #{prev_columns.map(&:inspect) * ', '} must be restricted", 'MockStatement') unless hit_column
+          else
+            prev_columns << column
+          end
+          filter_has_column?(filter, column)
+        end
+      end
+
+      def filter_has_column?(filter, column)
+        filter[column]
+      end
+
+      def validate_partion_key_filter!(filter)
+        missing_partition_keys = Set.new(partition_key_names) - filter.keys
+        raise Cassandra::Errors::InvalidError.new("Missing partition key part(s) #{missing_partition_keys.map(&:inspect) * ', '}", 'MockStatement') unless missing_partition_keys.empty?
       end
 
       def primary_key_names
