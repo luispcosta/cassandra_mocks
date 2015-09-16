@@ -182,6 +182,28 @@ module Cassandra
             end
           end
 
+          describe 'filtering by clustering columns' do
+            it 'should return all records for that partition, matching the specified clustering columns' do
+              expected_results = [
+                  {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1'},
+                  {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2'},
+              ]
+              expect(subject.select('*', {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1'})).to eq(expected_results)
+            end
+
+            context 'with multiple clustering columns specified' do
+              it 'should return all records for that partition, matching the specified clustering columns' do
+                expected_results = [
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1'},
+                ]
+                expect(subject.select('*', {'pk1' => 'partition 2',
+                                            'pk2' => 'additional partition 2',
+                                            'ck1' => 'clustering 1',
+                                            'ck2' => 'additional clustering 1'})).to eq(expected_results)
+              end
+            end
+          end
+
         end
 
       end

@@ -24,7 +24,7 @@ module Cassandra
 
         selected_rows = if filter
                           rows.select do |row|
-                            row.slice(*partition_key_names) == filter.slice(*partition_key_names)
+                            row.slice(*filter.keys) == filter
                           end
                         else
                           rows
