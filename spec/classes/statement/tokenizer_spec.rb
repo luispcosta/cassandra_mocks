@@ -57,6 +57,14 @@ module Cassandra
 
           end
 
+          describe 'string parsing' do
+            let(:statement) { "'hello, world'" }
+
+            xit 'should be able to build a string' do
+              expect(subject.tokens).to eq(string: 'hello, world')
+            end
+          end
+
           describe 'parsing well structured statements' do
             let(:statement) { 'SELECT * FROM everything' }
 

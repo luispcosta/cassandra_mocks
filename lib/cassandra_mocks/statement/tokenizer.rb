@@ -29,7 +29,17 @@ module Cassandra
         attr_reader :tokens
 
         def initialize(cql)
-          @tokens = cql.split.map { |keyword| {(KEYWORD_MAP[keyword.upcase] || :id) => keyword} }
+          @tokens = []
+          current_token = ''
+          cql.chars.each do |char|
+            if char == ' '
+              @tokens << {(KEYWORD_MAP[current_token.upcase] || :id) => current_token}
+              current_token = ''
+            else
+              current_token << char
+            end
+          end
+          @tokens << {(KEYWORD_MAP[current_token.upcase] || :id) => current_token}
         end
 
       end
