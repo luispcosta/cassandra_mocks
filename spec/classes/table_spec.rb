@@ -291,6 +291,130 @@ module Cassandra
 
       end
 
+      describe '#delete' do
+        let(:attributes) do
+          {'pk1' => 'partition',
+           'pk2' => 'additional partition',
+           'ck1' => 'clustering',
+           'ck2' => 'additional clustering'}
+        end
+        let(:partition_key) { [pk_part_one, pk_part_two] }
+        let(:clustering_key) { [ck_part_one, ck_part_two] }
+        let(:list_of_attributes) do
+          (1..2).map do |pk1|
+            (1..2).map do |pk2|
+              (1..2).map do |ck1|
+                (1..2).map do |ck2|
+                  {
+                      'pk1' => "partition #{pk1}",
+                      'pk2' => "additional partition #{pk2}",
+                      'ck1' => "clustering #{ck1}",
+                      'ck2' => "additional clustering #{ck2}",
+                  }
+                end
+              end
+            end
+          end.flatten
+        end
+
+        before do
+          subject.insert(attributes)
+          list_of_attributes.each do |attributes|
+            subject.insert(attributes)
+          end
+        end
+
+        describe 'filtering by partition key' do
+          it 'should return all records for that partition' do
+            expected_results = [{'pk1' => 'partition', 'pk2' => 'additional partition', 'ck1' => 'clustering', 'ck2' => 'additional clustering'}]
+            subject.delete({'pk1' => 'partition', 'pk2' => 'additional partition'})
+            expect(subject.rows).not_to include(*expected_results)
+          end
+
+          context 'with a different partition key' do
+            it 'should return all records for that partition' do
+              expected_results = [
+                  {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1'},
+                  {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2'},
+                  {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 1'},
+                  {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'},
+              ]
+              subject.delete({'pk1' => 'partition 2', 'pk2' => 'additional partition 2'})
+              expect(subject.rows).not_to include(*expected_results)
+            end
+          end
+
+          it 'should raise an error if only specifying part of the partition key' do
+            expect { (subject.delete({'pk1' => 'partition'})) }.to raise_error(Cassandra::Errors::InvalidError, 'Missing partition key part(s) "pk2"')
+          end
+
+          context 'with a different part missing' do
+            it 'should raise an error' do
+              expect { (subject.delete({'pk2' => 'additional partition'})) }.to raise_error(Cassandra::Errors::InvalidError, 'Missing partition key part(s) "pk1"')
+            end
+          end
+
+          context 'with both parts missing' do
+            it 'should raise an error' do
+              expect { (subject.delete({'ck1' => 'clustering'})) }.to raise_error(Cassandra::Errors::InvalidError, 'Missing partition key part(s) "pk1", "pk2"')
+            end
+          end
+        end
+
+        describe 'filtering by clustering columns' do
+          it 'should return all records for that partition, matching the specified clustering columns' do
+            expected_results = [
+                {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1'},
+                {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2'},
+            ]
+            subject.delete({'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1'})
+            expect(subject.rows).not_to include(*expected_results)
+          end
+
+          it 'should raise an error if earlier clustering keys are not restricted' do
+            expect do
+              subject.delete({'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck2' => 'additional clustering 1'})
+            end.to raise_error(Cassandra::Errors::InvalidError, 'Clustering key part(s) "ck1" must be restricted')
+          end
+
+          context 'with a different set of clustering columns' do
+            let(:attributes) do
+              {'pk1' => 'other partition',
+               'cluster1' => 'clustering',
+               'cluster2' => 'additional clustering 1',
+               'cluster3' => 'additional clustering 2'}
+            end
+            let(:list_of_attributes) { [] }
+
+            let(:ck_part_one) { Cassandra::Column.new('cluster1', 'string', :desc) }
+            let(:ck_part_two) { Cassandra::Column.new('cluster2', 'string', :desc) }
+            let(:ck_part_three) { Cassandra::Column.new('cluster3', 'string', :desc) }
+            let(:partition_key) { [pk_part_one] }
+            let(:clustering_key) { [ck_part_one, ck_part_two, ck_part_three] }
+
+            it 'should raise an error if earlier clustering keys are not restricted' do
+              expect do
+                subject.delete({'pk1' => 'partition 2', 'cluster3' => 'additional clustering 1'})
+              end.to raise_error(Cassandra::Errors::InvalidError, 'Clustering key part(s) "cluster1", "cluster2" must be restricted')
+            end
+          end
+
+          context 'with multiple clustering columns specified' do
+            it 'should return all records for that partition, matching the specified clustering columns' do
+              expected_results = [
+                  {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1'},
+              ]
+              subject.delete({'pk1' => 'partition 2',
+                                          'pk2' => 'additional partition 2',
+                                          'ck1' => 'clustering 1',
+                                          'ck2' => 'additional clustering 1'})
+              expect(subject.rows).not_to include(*expected_results)
+            end
+          end
+        end
+
+      end
+
     end
   end
 end

@@ -32,6 +32,11 @@ module Cassandra
         end
       end
 
+      def delete(filter)
+        rows_to_remove = select('*', filter)
+        @rows.reject! { |row| rows_to_remove.include?(row) }
+      end
+
       def rows
         @rows ||= []
       end
