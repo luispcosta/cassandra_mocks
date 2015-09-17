@@ -16,6 +16,7 @@
 
 require 'active_support/core_ext/class/attribute_accessors'
 require 'cassandra_mocks/table'
+require 'cassandra_mocks/statement/tokenizer'
 require 'cassandra_mocks/statement'
 require 'cassandra_mocks/keyspace'
 require 'cassandra_mocks/cluster'
