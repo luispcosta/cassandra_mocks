@@ -48,6 +48,11 @@ module Cassandra
             it_behaves_like 'a token from a reserved keyword', ']', :rbracket
             it_behaves_like 'a token from a reserved keyword', '=', :eql
 
+            context 'unrecognized keywords' do
+              it_behaves_like 'a token from a reserved keyword', 'Bob', :id
+              it_behaves_like 'a token from a reserved keyword', 'Karen', :id
+            end
+
           end
 
 

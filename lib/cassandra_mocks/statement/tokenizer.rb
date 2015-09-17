@@ -27,7 +27,7 @@ module Cassandra
         attr_reader :tokens
 
         def initialize(cql)
-          @tokens = [KEYWORD_MAP[cql.upcase] => cql]
+          @tokens = [(KEYWORD_MAP[cql.upcase] || :id) => cql]
         end
 
       end
