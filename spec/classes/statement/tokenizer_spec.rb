@@ -60,8 +60,16 @@ module Cassandra
           describe 'string parsing' do
             let(:statement) { "'hello, world'" }
 
-            xit 'should be able to build a string' do
-              expect(subject.tokens).to eq(string: 'hello, world')
+            it 'should be able to build a string' do
+              expect(subject.tokens).to eq([string: 'hello, world'])
+            end
+          end
+
+          describe 'name parsing' do
+            let(:statement) { '"hello, world"' }
+
+            it 'should be able to build a name' do
+              expect(subject.tokens).to eq([name: 'hello, world'])
             end
           end
 

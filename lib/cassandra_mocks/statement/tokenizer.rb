@@ -31,15 +31,34 @@ module Cassandra
         def initialize(cql)
           @tokens = []
           current_token = ''
+
+          in_string = false
+          in_name = false
           cql.chars.each do |char|
-            if char == ' '
+            if char == '"'
+              if in_name
+                @tokens << {name: current_token}
+                current_token = ''
+                in_name = false
+              else
+                in_name = true
+              end
+            elsif char == "'"
+              if in_string
+                @tokens << {string: current_token}
+                current_token = ''
+                in_string = false
+              else
+                in_string = true
+              end
+            elsif !in_name && !in_string && char == ' '
               @tokens << {(KEYWORD_MAP[current_token.upcase] || :id) => current_token}
               current_token = ''
             else
               current_token << char
             end
           end
-          @tokens << {(KEYWORD_MAP[current_token.upcase] || :id) => current_token}
+          @tokens << {(KEYWORD_MAP[current_token.upcase] || :id) => current_token} if current_token.present?
         end
 
       end
