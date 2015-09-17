@@ -34,8 +34,9 @@ module Cassandra
 
           in_string = false
           in_name = false
+          prev_char = nil
           cql.chars.each do |char|
-            if char == '"'
+            if char == '"' && prev_char != '\\'
               if in_name
                 @tokens << {name: current_token}
                 current_token = ''
@@ -43,7 +44,7 @@ module Cassandra
               else
                 in_name = true
               end
-            elsif char == "'"
+            elsif char == "'" && prev_char != '\\'
               if in_string
                 @tokens << {string: current_token}
                 current_token = ''
@@ -54,9 +55,11 @@ module Cassandra
             elsif !in_name && !in_string && char == ' '
               @tokens << {(KEYWORD_MAP[current_token.upcase] || :id) => current_token}
               current_token = ''
+            elsif char == '\\'
             else
               current_token << char
             end
+            prev_char = char
           end
           @tokens << {(KEYWORD_MAP[current_token.upcase] || :id) => current_token} if current_token.present?
         end
