@@ -38,6 +38,15 @@ module Cassandra
             it_behaves_like 'a token from a reserved keyword', 'AND', :and
             it_behaves_like 'a token from a reserved keyword', 'IN', :in
             it_behaves_like 'a token from a reserved keyword', 'NOT', :not
+            it_behaves_like 'a token from a reserved keyword', '(', :lparen
+            it_behaves_like 'a token from a reserved keyword', ')', :rparen
+            it_behaves_like 'a token from a reserved keyword', '<', :ltri
+            it_behaves_like 'a token from a reserved keyword', '>', :rtri
+            it_behaves_like 'a token from a reserved keyword', ',', :comma
+            it_behaves_like 'a token from a reserved keyword', '.', :dot
+            it_behaves_like 'a token from a reserved keyword', '[', :lbracket
+            it_behaves_like 'a token from a reserved keyword', ']', :rbracket
+            it_behaves_like 'a token from a reserved keyword', '=', :eql
 
           end
 
