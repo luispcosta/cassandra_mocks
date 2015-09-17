@@ -26,6 +26,13 @@ module Cassandra
               expect(statement.args).to eq({'category' => 'goodbye', 'message' => 'cruel world'})
             end
           end
+
+          context 'with a parameterized query' do
+            it 'should apply query parameters to the parsed query' do
+              statement = Statement.new("INSERT INTO table (category, message, sub_message) VALUES ('goodbye', ?, ?)", %w(world cruel))
+              expect(statement.args).to eq({'category' => 'goodbye', 'message' => 'world', 'sub_message' => 'cruel'})
+            end
+          end
         end
 
       end
