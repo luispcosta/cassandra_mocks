@@ -22,12 +22,14 @@ module Cassandra
             '[' => :lbracket,
             ']' => :rbracket,
             '=' => :eql,
+            '*' => :star,
+            '?' => :parameter,
         }
 
         attr_reader :tokens
 
         def initialize(cql)
-          @tokens = [(KEYWORD_MAP[cql.upcase] || :id) => cql]
+          @tokens = cql.split.map { |keyword| {(KEYWORD_MAP[keyword.upcase] || :id) => keyword} }
         end
 
       end

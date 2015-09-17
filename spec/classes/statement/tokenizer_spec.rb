@@ -47,6 +47,8 @@ module Cassandra
             it_behaves_like 'a token from a reserved keyword', '[', :lbracket
             it_behaves_like 'a token from a reserved keyword', ']', :rbracket
             it_behaves_like 'a token from a reserved keyword', '=', :eql
+            it_behaves_like 'a token from a reserved keyword', '*', :star
+            it_behaves_like 'a token from a reserved keyword', '?', :parameter
 
             context 'unrecognized keywords' do
               it_behaves_like 'a token from a reserved keyword', 'Bob', :id
@@ -55,6 +57,19 @@ module Cassandra
 
           end
 
+          describe 'parsing well structured statements' do
+            let(:statement) { 'SELECT * FROM everything' }
+
+            it 'should split the statement into tokens' do
+              expected_tokens = [
+                  {select: 'SELECT'},
+                  {star: '*'},
+                  {from: 'FROM'},
+                  {id: 'everything'},
+              ]
+              expect(subject.tokens).to eq(expected_tokens)
+            end
+          end
 
         end
 
