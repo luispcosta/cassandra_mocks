@@ -51,6 +51,10 @@ module Cassandra
             elsif char == "'" && prev_char != '\\'
               in_string = tokenize_string(:string, in_string, current_token)
               current_token = '' unless in_string
+            elsif !in_name && !in_string && char == '.' && prev_char !~ /\d/
+              translate_token(current_token)
+              translate_token(char)
+              current_token = ''
             elsif !in_name && !in_string && %w(, ( ) = ?).include?(char)
               translate_token(current_token)
               translate_token(char)

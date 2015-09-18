@@ -162,6 +162,22 @@ module Cassandra
             end
           end
 
+          describe 'tokenizing namespaced items' do
+            let(:statement) { 'SELECT * FROM keyspace_name.table_name' }
+
+            it 'should split the statement into tokens' do
+              expected_tokens = [
+                  {select: 'SELECT'},
+                  {star: '*'},
+                  {from: 'FROM'},
+                  {id: 'keyspace_name'},
+                  {dot: '.'},
+                  {id: 'table_name'},
+              ]
+              expect(subject.tokens).to eq(expected_tokens)
+            end
+          end
+
         end
 
       end
