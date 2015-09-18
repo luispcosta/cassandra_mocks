@@ -54,7 +54,7 @@ module Cassandra
             elsif char == '\\'
               # do nothing...
             else
-                          current_token << char
+              current_token << char
             end
             prev_char = char
           end
@@ -71,7 +71,11 @@ module Cassandra
         end
 
         def translate_token(current_token)
-          @tokens << {(KEYWORD_MAP[current_token.upcase] || :id) => current_token}
+          @tokens << if current_token =~ /^\d+$/
+                       {int: current_token}
+                     else
+                       {(KEYWORD_MAP[current_token.upcase] || :id) => current_token}
+                     end
         end
 
       end

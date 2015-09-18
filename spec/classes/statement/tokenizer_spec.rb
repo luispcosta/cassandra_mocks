@@ -57,6 +57,16 @@ module Cassandra
 
           end
 
+          describe 'numerics' do
+            describe 'integers' do
+              let(:statement) { rand(0..100).to_s }
+
+              it 'should be able to parse integral numerics' do
+                expect(subject.tokens).to eq([int: statement])
+              end
+            end
+          end
+
           describe 'string parsing' do
             let(:statement) { "'hello, world'" }
 
@@ -90,7 +100,7 @@ module Cassandra
           end
 
           describe 'parsing well structured statements' do
-            let(:statement) { 'SELECT * FROM everything' }
+            let(:statement) { 'SELECT * FROM everything WHERE something = ? AND nothing IN ( 1 , 2 )' }
 
             it 'should split the statement into tokens' do
               expected_tokens = [
@@ -98,6 +108,18 @@ module Cassandra
                   {star: '*'},
                   {from: 'FROM'},
                   {id: 'everything'},
+                  {where: 'WHERE'},
+                  {id: 'something'},
+                  {eql: '='},
+                  {parameter: '?'},
+                  {and: 'AND'},
+                  {id: 'nothing'},
+                  {in: 'IN'},
+                  {lparen: '('},
+                  {int: '1'},
+                  {comma: ','},
+                  {int: '2'},
+                  {rparen: ')'},
               ]
               expect(subject.tokens).to eq(expected_tokens)
             end
