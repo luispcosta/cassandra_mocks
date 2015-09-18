@@ -4,6 +4,9 @@ module Cassandra
       class Tokenizer
         #noinspection RubyStringKeysInHashInspection
         KEYWORD_MAP = {
+            'CREATE' => :create,
+            'TABLE' => :table,
+            'KEYSPACE' => :keyspace,
             'INSERT' => :insert,
             'VALUES' => :values,
             'SELECT' => :select,
