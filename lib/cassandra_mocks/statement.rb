@@ -17,16 +17,22 @@ module Cassandra
       private
 
       def parse_insert_query(args, tokens)
+        keyspace_name = nil
+
         tokens.pop
         table_name = tokens.pop.value
-        tokens.pop
+        if tokens.pop.dot?
+          keyspace_name = table_name
+          table_name = tokens.pop.value
+          tokens.pop
+        end
 
         insert_keys = parenthesis_values(tokens)
         2.times { tokens.pop }
         insert_values = parenthesis_values(tokens)
 
         values = insert_args(insert_keys, insert_values, args)
-        @args = {table: table_name, values: values}
+        @args = {keyspace: keyspace_name, table: table_name, values: values}
       end
 
       def parenthesis_values(tokens)
