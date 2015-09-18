@@ -52,12 +52,10 @@ module Cassandra
               in_string = tokenize_string(:string, in_string, current_token)
               current_token = '' unless in_string
             elsif !in_name && !in_string && char == '.' && prev_char !~ /\d/
-              translate_token(current_token)
-              translate_token(char)
+              translate_multiple_tokens(char, current_token)
               current_token = ''
             elsif !in_name && !in_string && %w(, ( ) = ?).include?(char)
-              translate_token(current_token)
-              translate_token(char)
+              translate_multiple_tokens(char, current_token)
               current_token = ''
             elsif !in_name && !in_string && char == ' '
               translate_token(current_token)
@@ -70,6 +68,11 @@ module Cassandra
             prev_char = char
           end
           translate_token(current_token) if current_token.present?
+        end
+
+        def translate_multiple_tokens(char, current_token)
+          translate_token(current_token)
+          translate_token(char)
         end
 
         def tokenize_string(type, in_string, current_token)
