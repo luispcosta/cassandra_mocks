@@ -35,6 +35,12 @@ module Cassandra
           in_string = false
           in_name = false
           prev_char = nil
+          tokenize(cql, current_token, in_name, in_string, prev_char)
+        end
+
+        private
+
+        def tokenize(cql, current_token, in_name, in_string, prev_char)
           cql.chars.each do |char|
             if char == '"' && prev_char != '\\'
               if in_name
@@ -53,15 +59,20 @@ module Cassandra
                 in_string = true
               end
             elsif !in_name && !in_string && char == ' '
-              @tokens << {(KEYWORD_MAP[current_token.upcase] || :id) => current_token}
+              translate_token(current_token)
               current_token = ''
             elsif char == '\\'
+              # do nothing...
             else
-              current_token << char
+                          current_token << char
             end
             prev_char = char
           end
-          @tokens << {(KEYWORD_MAP[current_token.upcase] || :id) => current_token} if current_token.present?
+          translate_token(current_token) if current_token.present?
+        end
+
+        def translate_token(current_token)
+          @tokens << {(KEYWORD_MAP[current_token.upcase] || :id) => current_token}
         end
 
       end
