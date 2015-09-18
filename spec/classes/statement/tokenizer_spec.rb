@@ -16,14 +16,14 @@ module Cassandra
               let(:statement) { keyword }
 
               it "should parse '#{keyword}' as a(n) '#{token}' token" do
-                expect(subject.tokens).to eq([token => keyword])
+                expect(subject.tokens).to eq(tokenize_expected [token => keyword])
               end
 
               context 'with a different case' do
                 let(:statement) { keyword.downcase }
 
                 it "should parse '#{keyword.downcase}' as a(n) '#{token}' token" do
-                  expect(subject.tokens).to eq([token => keyword.downcase])
+                  expect(subject.tokens).to eq(tokenize_expected [token => keyword.downcase])
                 end
 
               end
@@ -65,7 +65,7 @@ module Cassandra
               let(:statement) { rand(0..100).to_s }
 
               it 'should be able to parse integral numerics' do
-                expect(subject.tokens).to eq([int: statement])
+                expect(subject.tokens).to eq(tokenize_expected [int: statement])
               end
             end
 
@@ -73,7 +73,7 @@ module Cassandra
               let(:statement) { (rand * 100.0).to_s }
 
               it 'should be able to parse integral numerics' do
-                expect(subject.tokens).to eq([float: statement])
+                expect(subject.tokens).to eq(tokenize_expected [float: statement])
               end
             end
           end
@@ -82,14 +82,14 @@ module Cassandra
             let(:statement) { "'hello, world'" }
 
             it 'should be able to build a string' do
-              expect(subject.tokens).to eq([string: 'hello, world'])
+              expect(subject.tokens).to eq(tokenize_expected [string: 'hello, world'])
             end
 
             context 'with escaped quotes' do
               let(:statement) { "'\\'hello world\\''" }
 
               it 'should be able to build a string' do
-                expect(subject.tokens).to eq([string: "'hello world'"])
+                expect(subject.tokens).to eq(tokenize_expected [string: "'hello world'"])
               end
             end
           end
@@ -98,14 +98,14 @@ module Cassandra
             let(:statement) { '"hello, world"' }
 
             it 'should be able to build a name' do
-              expect(subject.tokens).to eq([name: 'hello, world'])
+              expect(subject.tokens).to eq(tokenize_expected [name: 'hello, world'])
             end
 
             context 'with escaped quotes' do
               let(:statement) { '"\\"hello world\""' }
 
               it 'should be able to build a name' do
-                expect(subject.tokens).to eq([name: '"hello world"'])
+                expect(subject.tokens).to eq(tokenize_expected [name: '"hello world"'])
               end
             end
           end
@@ -132,7 +132,7 @@ module Cassandra
                   {int: '2'},
                   {rparen: ')'},
               ]
-              expect(subject.tokens).to eq(expected_tokens)
+              expect(subject.tokens).to eq(tokenize_expected expected_tokens)
             end
           end
 
@@ -158,7 +158,7 @@ module Cassandra
                   {int: '2'},
                   {rparen: ')'},
               ]
-              expect(subject.tokens).to eq(expected_tokens)
+              expect(subject.tokens).to eq(tokenize_expected expected_tokens)
             end
           end
 
@@ -174,7 +174,7 @@ module Cassandra
                   {dot: '.'},
                   {id: 'table_name'},
               ]
-              expect(subject.tokens).to eq(expected_tokens)
+              expect(subject.tokens).to eq(tokenize_expected expected_tokens)
             end
           end
 
@@ -189,6 +189,12 @@ module Cassandra
             results << queue.pop until queue.empty?
             expect(results).to eq(subject.tokens)
           end
+        end
+
+        private
+
+        def tokenize_expected(tokens)
+          tokens.map { |token_attributes| Token.new(*token_attributes.first) }
         end
 
       end

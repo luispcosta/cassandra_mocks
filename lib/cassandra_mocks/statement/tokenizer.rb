@@ -83,7 +83,7 @@ module Cassandra
 
         def tokenize_string(type, in_string, current_token)
           if in_string
-            @tokens << {type => current_token}
+            @tokens << Token.new(type, current_token)
             false
           else
             true
@@ -93,11 +93,11 @@ module Cassandra
         def translate_token(current_token)
           if current_token.present?
             @tokens << if current_token =~ /^\d+\.\d+$/
-                         {float: current_token}
+                         Token.new(:float, current_token)
                        elsif current_token =~ /^\d+$/
-                         {int: current_token}
+                         Token.new(:int, current_token)
                        else
-                         {(KEYWORD_MAP[current_token.upcase] || :id) => current_token}
+                         Token.new(KEYWORD_MAP[current_token.upcase] || :id, current_token)
                        end
           end
         end
