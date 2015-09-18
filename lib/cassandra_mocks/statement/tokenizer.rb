@@ -71,7 +71,9 @@ module Cassandra
         end
 
         def translate_token(current_token)
-          @tokens << if current_token =~ /^\d+$/
+          @tokens << if current_token =~ /^\d+\.\d+$/
+                       {float: current_token}
+                     elsif current_token =~ /^\d+$/
                        {int: current_token}
                      else
                        {(KEYWORD_MAP[current_token.upcase] || :id) => current_token}

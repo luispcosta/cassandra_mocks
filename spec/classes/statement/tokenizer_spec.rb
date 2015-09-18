@@ -65,6 +65,14 @@ module Cassandra
                 expect(subject.tokens).to eq([int: statement])
               end
             end
+
+            describe 'floats' do
+              let(:statement) { (rand * 100.0).to_s }
+
+              it 'should be able to parse integral numerics' do
+                expect(subject.tokens).to eq([float: statement])
+              end
+            end
           end
 
           describe 'string parsing' do
