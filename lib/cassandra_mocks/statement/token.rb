@@ -12,6 +12,25 @@ module Cassandra
               value
           end
         end
+
+        def respond_to?(method)
+          method_inquiry?(method) || super
+        end
+
+        def method_missing(method, *args)
+          if method_inquiry?(method)
+            method[/[^\?]+/].to_sym == type
+          else
+            super
+          end
+        end
+
+        private
+
+        def method_inquiry?(method)
+          method =~ /\?$/
+        end
+
       end
     end
   end

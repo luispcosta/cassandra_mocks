@@ -54,6 +54,30 @@ module Cassandra
           end
         end
 
+        describe 'type querying' do
+          let(:type) { :float }
+
+          it 'should be able to query directly for the type' do
+            expect(subject).to be_float
+          end
+
+          context 'with a different type' do
+            let(:type) { :int }
+
+            it 'should be able to query directly for the type' do
+              expect(subject).not_to be_float
+            end
+          end
+
+          context 'when querying for a different type' do
+            let(:type) { :string }
+
+            it 'should be able to query directly for the type' do
+              expect(subject).to be_string
+            end
+          end
+        end
+
       end
     end
   end
