@@ -180,6 +180,17 @@ module Cassandra
 
         end
 
+        describe '#token_queue' do
+          let(:statement) { 'SELECT * FROM everything' }
+
+          it 'should build a queue from the list of tokens' do
+            results = []
+            queue = subject.token_queue
+            results << queue.pop until queue.empty?
+            expect(results).to eq(subject.tokens)
+          end
+        end
+
       end
     end
   end

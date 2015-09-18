@@ -41,6 +41,12 @@ module Cassandra
           tokenize(cql, current_token, in_name, in_string, prev_char)
         end
 
+        def token_queue
+          Queue.new.tap do |queue|
+            tokens.each { |token| queue << token }
+          end
+        end
+
         private
 
         def tokenize(cql, current_token, in_name, in_string, prev_char)
