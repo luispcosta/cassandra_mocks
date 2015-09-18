@@ -43,21 +43,11 @@ module Cassandra
         def tokenize(cql, current_token, in_name, in_string, prev_char)
           cql.chars.each do |char|
             if char == '"' && prev_char != '\\'
-              if in_name
-                @tokens << {name: current_token}
-                current_token = ''
-                in_name = false
-              else
-                in_name = true
-              end
+              in_name = tokenize_string(:name, in_name, current_token)
+              current_token = '' unless in_name
             elsif char == "'" && prev_char != '\\'
-              if in_string
-                @tokens << {string: current_token}
-                current_token = ''
-                in_string = false
-              else
-                in_string = true
-              end
+              in_string = tokenize_string(:string, in_string, current_token)
+              current_token = '' unless in_string
             elsif !in_name && !in_string && char == ' '
               translate_token(current_token)
               current_token = ''
@@ -69,6 +59,15 @@ module Cassandra
             prev_char = char
           end
           translate_token(current_token) if current_token.present?
+        end
+
+        def tokenize_string(type, in_string, current_token)
+          if in_string
+            @tokens << {type => current_token}
+            false
+          else
+            true
+          end
         end
 
         def translate_token(current_token)
