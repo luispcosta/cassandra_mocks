@@ -22,6 +22,38 @@ module Cassandra
           end
         end
 
+        describe '#normalized_value' do
+          context 'when a string' do
+            let(:type) { :string }
+            let(:value) { 'hello world' }
+            its(:normalized_value) { is_expected.to eq('hello world') }
+          end
+
+          context 'when a name' do
+            let(:type) { :name }
+            let(:value) { 'hello world' }
+            its(:normalized_value) { is_expected.to eq('hello world') }
+          end
+
+          context 'when an id' do
+            let(:type) { :id }
+            let(:value) { 'hello world' }
+            its(:normalized_value) { is_expected.to eq('hello world') }
+          end
+
+          context 'when an integer' do
+            let(:type) { :int }
+            let(:value) { '5' }
+            its(:normalized_value) { is_expected.to eq(5) }
+          end
+
+          context 'when a float' do
+            let(:type) { :float }
+            let(:value) { '5.367' }
+            its(:normalized_value) { is_expected.to eq(5.367) }
+          end
+        end
+
       end
     end
   end
