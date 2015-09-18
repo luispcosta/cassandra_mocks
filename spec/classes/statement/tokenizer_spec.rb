@@ -107,8 +107,34 @@ module Cassandra
             end
           end
 
-          describe 'parsing well structured statements' do
+          describe 'tokenizing well structured statements' do
             let(:statement) { 'SELECT * FROM everything WHERE something = ? AND nothing IN ( 1 , 2 )' }
+
+            it 'should split the statement into tokens' do
+              expected_tokens = [
+                  {select: 'SELECT'},
+                  {star: '*'},
+                  {from: 'FROM'},
+                  {id: 'everything'},
+                  {where: 'WHERE'},
+                  {id: 'something'},
+                  {eql: '='},
+                  {parameter: '?'},
+                  {and: 'AND'},
+                  {id: 'nothing'},
+                  {in: 'IN'},
+                  {lparen: '('},
+                  {int: '1'},
+                  {comma: ','},
+                  {int: '2'},
+                  {rparen: ')'},
+              ]
+              expect(subject.tokens).to eq(expected_tokens)
+            end
+          end
+
+          describe 'tokenizing statements lacking spaces' do
+            let(:statement) { 'SELECT * FROM everything WHERE something=? AND nothing IN (1,2)' }
 
             it 'should split the statement into tokens' do
               expected_tokens = [

@@ -48,6 +48,10 @@ module Cassandra
             elsif char == "'" && prev_char != '\\'
               in_string = tokenize_string(:string, in_string, current_token)
               current_token = '' unless in_string
+            elsif !in_name && !in_string && %w(, ( ) = ?).include?(char)
+              translate_token(current_token)
+              translate_token(char)
+              current_token = ''
             elsif !in_name && !in_string && char == ' '
               translate_token(current_token)
               current_token = ''
@@ -71,13 +75,15 @@ module Cassandra
         end
 
         def translate_token(current_token)
-          @tokens << if current_token =~ /^\d+\.\d+$/
-                       {float: current_token}
-                     elsif current_token =~ /^\d+$/
-                       {int: current_token}
-                     else
-                       {(KEYWORD_MAP[current_token.upcase] || :id) => current_token}
-                     end
+          if current_token.present?
+            @tokens << if current_token =~ /^\d+\.\d+$/
+                         {float: current_token}
+                       elsif current_token =~ /^\d+$/
+                         {int: current_token}
+                       else
+                         {(KEYWORD_MAP[current_token.upcase] || :id) => current_token}
+                       end
+          end
         end
 
       end
