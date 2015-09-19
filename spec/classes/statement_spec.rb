@@ -84,6 +84,11 @@ module Cassandra
               statement = Statement.new("SELECT * FROM everything WHERE pk1 = 'cds' and ck1 = 'Rock'", [])
               expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'everything', filter: {'pk1' => 'cds', 'ck1' => 'Rock'})
             end
+
+            it 'should support parameterized queries' do
+              statement = Statement.new("SELECT * FROM everything WHERE pk1 = 'cds' and ck1 = ?", ['Jazz'])
+              expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'everything', filter: {'pk1' => 'cds', 'ck1' => 'Jazz'})
+            end
           end
         end
 

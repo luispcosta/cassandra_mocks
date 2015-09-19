@@ -15,7 +15,7 @@ module Cassandra
           parse_insert_query(args, tokens)
         elsif type.select?
           @action = :select
-          parse_select_query(tokens)
+          parse_select_query(tokens, args)
         end
       end
 
@@ -40,7 +40,7 @@ module Cassandra
         @args = {keyspace: keyspace_name, table: table_name, values: values}
       end
 
-      def parse_select_query(tokens)
+      def parse_select_query(tokens, args)
         keyspace_name = nil
 
         select_columns = parenthesis_values(tokens, :from)
@@ -50,13 +50,15 @@ module Cassandra
           table_name = tokens.pop.value
         end
 
-        filter = {}
+        filter_keys = []
+        filter_values = []
         until tokens.empty?
-          filter_key = tokens.pop.value
+          filter_keys << tokens.pop.value
           tokens.pop
-          filter[filter_key] = tokens.pop.value
+          filter_values << tokens.pop.value
           tokens.pop unless tokens.empty?
         end
+        filter = insert_args(filter_keys, filter_values, args)
 
         @args = {keyspace: keyspace_name, table: table_name, columns: select_columns, filter: filter}
       end
