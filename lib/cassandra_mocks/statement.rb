@@ -7,12 +7,11 @@ module Cassandra
         @cql = cql
 
         tokens = Tokenizer.new(@cql).token_queue
-        type = tokens.pop
-        if type.insert?
-          @action = :insert
+        type_token = tokens.pop
+        @action = type_token.type
+        if type_token.insert?
           parse_insert_query(tokens, args)
-        elsif type.select?
-          @action = :select
+        elsif type_token.select?
           parse_select_query(tokens, args)
         end
       end
@@ -39,9 +38,14 @@ module Cassandra
       end
 
       def parse_select_query(tokens, args)
+        select_columns = parenthesis_values(tokens, :from)
+        parse_table_and_filter(tokens, args)
+        @args.merge!(columns: select_columns)
+      end
+
+      def parse_table_and_filter(tokens, args)
         keyspace_name = nil
 
-        select_columns = parenthesis_values(tokens, :from)
         table_name = tokens.pop.value
         if !tokens.empty? && tokens.pop.dot?
           keyspace_name = table_name
@@ -64,7 +68,7 @@ module Cassandra
         end
         filter = insert_args(filter_keys, filter_values, args)
 
-        @args = {keyspace: keyspace_name, table: table_name, columns: select_columns, filter: filter}
+        @args = {keyspace: keyspace_name, table: table_name, filter: filter}
       end
 
       def parenthesis_values(tokens, terminator)

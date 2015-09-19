@@ -42,8 +42,41 @@ module Cassandra
           end
         end
 
+        shared_examples_for 'a query with a restriction' do |keyword|
+
+          context 'with a restriction' do
+            it 'should parse the restriction as a column filter' do
+              statement = Statement.new("#{keyword} FROM everything WHERE pk1 = 'books'", [])
+              expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'everything', filter: {'pk1' => 'books'})
+            end
+
+            it 'should support multiple restrictions' do
+              statement = Statement.new("#{keyword} FROM everything WHERE pk1 = 'cds' and ck1 = 'Rock'", [])
+              expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'everything', filter: {'pk1' => 'cds', 'ck1' => 'Rock'})
+            end
+
+            context 'when the restriction provided is a range' do
+              it 'should support range restrictions using IN' do
+                statement = Statement.new("#{keyword} FROM everything WHERE pk1 = IN ('Videos', 'Games')", [])
+                expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'everything', filter: {'pk1' => %w(Videos Games)})
+              end
+
+              it 'should support parameterized restrictions' do
+                statement = Statement.new("#{keyword} FROM everything WHERE pk1 = IN (?, 'Games') and ck1 = ?", %w(Videos History))
+                expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'everything', filter: {'pk1' => %w(Videos Games), 'ck1' => 'History'})
+              end
+            end
+
+            it 'should support parameterized queries' do
+              statement = Statement.new("#{keyword} FROM everything WHERE pk1 = 'cds' and ck1 = ?", ['Jazz'])
+              expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'everything', filter: {'pk1' => 'cds', 'ck1' => 'Jazz'})
+            end
+          end
+
+        end
+
         context 'when the query is a SELECT query' do
-          it 'should be parsed as an select' do
+          it 'should be parsed as a delete' do
             statement = Statement.new('SELECT * FROM everything', [55])
             expect(statement.action).to eq(:select)
           end
@@ -74,34 +107,7 @@ module Cassandra
             end
           end
 
-          context 'with a restriction' do
-            it 'should parse the restriction as a column filter' do
-              statement = Statement.new("SELECT * FROM everything WHERE pk1 = 'books'", [])
-              expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'everything', filter: {'pk1' => 'books'})
-            end
-
-            it 'should support multiple restrictions' do
-              statement = Statement.new("SELECT * FROM everything WHERE pk1 = 'cds' and ck1 = 'Rock'", [])
-              expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'everything', filter: {'pk1' => 'cds', 'ck1' => 'Rock'})
-            end
-
-            context 'when the restriction provided is a range' do
-              it 'should support range restrictions using IN' do
-                statement = Statement.new("SELECT * FROM everything WHERE pk1 = IN ('Videos', 'Games')", [])
-                expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'everything', filter: {'pk1' => %w(Videos Games)})
-              end
-
-              it 'should support parameterized restrictions' do
-                statement = Statement.new("SELECT * FROM everything WHERE pk1 = IN (?, 'Games') and ck1 = ?", %w(Videos History))
-                expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'everything', filter: {'pk1' => %w(Videos Games), 'ck1' => 'History'})
-              end
-            end
-
-            it 'should support parameterized queries' do
-              statement = Statement.new("SELECT * FROM everything WHERE pk1 = 'cds' and ck1 = ?", ['Jazz'])
-              expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'everything', filter: {'pk1' => 'cds', 'ck1' => 'Jazz'})
-            end
-          end
+          it_behaves_like 'a query with a restriction', 'SELECT *'
         end
 
       end
