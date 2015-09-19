@@ -6,19 +6,22 @@ module Cassandra
       def initialize(cql, args)
         @cql = cql
 
-        tokens = Tokenizer.new(@cql).token_queue
         type_token = tokens.pop
         @action = type_token.type
         if type_token.insert?
-          parse_insert_query(tokens, args)
+          parse_insert_query(args)
         elsif type_token.select?
-          parse_select_query(tokens, args)
+          parse_select_query(args)
         end
       end
 
       private
 
-      def parse_insert_query(tokens, args)
+      def tokens
+        @tokens ||= Tokenizer.new(@cql).token_queue
+      end
+
+      def parse_insert_query(args)
         keyspace_name = nil
 
         tokens.pop
@@ -29,21 +32,21 @@ module Cassandra
           tokens.pop
         end
 
-        insert_keys = parenthesis_values(tokens, :rparen)
+        insert_keys = parenthesis_values(:rparen)
         2.times { tokens.pop }
-        insert_values = parenthesis_values(tokens, :rparen)
+        insert_values = parenthesis_values(:rparen)
 
         values = insert_args(insert_keys, insert_values, args)
         @args = {keyspace: keyspace_name, table: table_name, values: values}
       end
 
-      def parse_select_query(tokens, args)
-        select_columns = parenthesis_values(tokens, :from)
-        parse_table_and_filter(tokens, args)
+      def parse_select_query(args)
+        select_columns = parenthesis_values(:from)
+        parse_table_and_filter(args)
         @args.merge!(columns: select_columns)
       end
 
-      def parse_table_and_filter(tokens, args)
+      def parse_table_and_filter(args)
         keyspace_name = nil
 
         table_name = tokens.pop.value
@@ -60,7 +63,7 @@ module Cassandra
           value_token = tokens.pop
           if value_token.type == :in
             tokens.pop
-            filter_values << parenthesis_values(tokens, :rparen)
+            filter_values << parenthesis_values(:rparen)
           else
             filter_values << value_token.value
           end
@@ -71,7 +74,7 @@ module Cassandra
         @args = {keyspace: keyspace_name, table: table_name, filter: filter}
       end
 
-      def parenthesis_values(tokens, terminator)
+      def parenthesis_values(terminator)
         [].tap do |insert_values|
           until (key = tokens.pop).type == terminator
             insert_values << key.value unless key.comma?
