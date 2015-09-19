@@ -55,7 +55,13 @@ module Cassandra
         until tokens.empty?
           filter_keys << tokens.pop.value
           tokens.pop
-          filter_values << tokens.pop.value
+          value_token = tokens.pop
+          if value_token.type == :in
+            tokens.pop
+            filter_values << parenthesis_values(tokens, :rparen)
+          else
+            filter_values << value_token.value
+          end
           tokens.pop unless tokens.empty?
         end
         filter = insert_args(filter_keys, filter_values, args)
@@ -75,7 +81,13 @@ module Cassandra
         param_index = -1
         insert_keys.count.times.inject({}) do |memo, index|
           value = insert_values[index]
-          value = (value == '?') ? args[param_index+=1] : value
+          if value.is_a?(Array)
+            value = value.map do |value|
+              (value == '?') ? args[param_index+=1] : value
+            end
+          elsif value == '?'
+            value = args[param_index+=1]
+          end
           memo.merge!(insert_keys[index] => value)
         end
       end
