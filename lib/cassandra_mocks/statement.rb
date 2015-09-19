@@ -12,7 +12,7 @@ module Cassandra
         type = tokens.pop
         if type.insert?
           @action = :insert
-          parse_insert_query(args, tokens)
+          parse_insert_query(tokens, args)
         elsif type.select?
           @action = :select
           parse_select_query(tokens, args)
@@ -21,7 +21,7 @@ module Cassandra
 
       private
 
-      def parse_insert_query(args, tokens)
+      def parse_insert_query(tokens, args)
         keyspace_name = nil
 
         tokens.pop
