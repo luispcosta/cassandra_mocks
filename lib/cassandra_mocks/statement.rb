@@ -6,7 +6,7 @@ module Cassandra
       def initialize(cql, args)
         @cql = cql
 
-        type_token = tokens.pop
+        type_token = next_token
         @action = type_token.type
         if type_token.insert?
           parse_insert_query(args)
@@ -21,19 +21,23 @@ module Cassandra
         @tokens ||= Tokenizer.new(@cql).token_queue
       end
 
+      def next_token
+        !tokens.empty? && tokens.pop
+      end
+
       def parse_insert_query(args)
         keyspace_name = nil
 
-        tokens.pop
-        table_name = tokens.pop.value
-        if tokens.pop.dot?
+        next_token
+        table_name = next_token.value
+        if next_token.dot?
           keyspace_name = table_name
-          table_name = tokens.pop.value
-          tokens.pop
+          table_name = next_token.value
+          next_token
         end
 
         insert_keys = parenthesis_values(:rparen)
-        2.times { tokens.pop }
+        2.times { next_token }
         insert_values = parenthesis_values(:rparen)
 
         values = insert_args(insert_keys, insert_values, args)
@@ -49,25 +53,25 @@ module Cassandra
       def parse_table_and_filter(args)
         keyspace_name = nil
 
-        table_name = tokens.pop.value
-        if !tokens.empty? && tokens.pop.dot?
+        table_name = next_token.value
+        if (token = next_token) && token.dot?
           keyspace_name = table_name
-          table_name = tokens.pop.value
+          table_name = next_token.value
         end
 
         filter_keys = []
         filter_values = []
         until tokens.empty?
-          filter_keys << tokens.pop.value
-          tokens.pop
-          value_token = tokens.pop
+          filter_keys << next_token.value
+          next_token
+          value_token = next_token
           if value_token.type == :in
-            tokens.pop
+            next_token
             filter_values << parenthesis_values(:rparen)
           else
             filter_values << value_token.value
           end
-          tokens.pop unless tokens.empty?
+          next_token unless tokens.empty?
         end
         filter = insert_args(filter_keys, filter_values, args)
 
@@ -76,7 +80,7 @@ module Cassandra
 
       def parenthesis_values(terminator)
         [].tap do |insert_values|
-          until (key = tokens.pop).type == terminator
+          until (key = next_token).type == terminator
             insert_values << key.value unless key.comma?
           end
         end
