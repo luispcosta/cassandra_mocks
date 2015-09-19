@@ -92,13 +92,16 @@ module Cassandra
       def insert_args(insert_keys, insert_values, args)
         args = param_queue(args)
         insert_keys.count.times.inject({}) do |memo, index|
-          value = insert_values[index]
-          if value.is_a?(Array)
-            value = value.map { |value| parameterized_value(args, value) }
-          else
-            value = parameterized_value(args, value)
-          end
+          value = mapped_value(args, insert_values[index])
           memo.merge!(insert_keys[index] => value)
+        end
+      end
+
+      def mapped_value(args, value)
+        if value.is_a?(Array)
+          value.map { |value| parameterized_value(args, value) }
+        else
+          parameterized_value(args, value)
         end
       end
 
