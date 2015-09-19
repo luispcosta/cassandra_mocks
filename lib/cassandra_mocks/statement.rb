@@ -50,7 +50,15 @@ module Cassandra
           table_name = tokens.pop.value
         end
 
-        @args = {keyspace: keyspace_name, table: table_name, columns: select_columns, filter: {}}
+        filter = {}
+        until tokens.empty?
+          filter_key = tokens.pop.value
+          tokens.pop
+          filter[filter_key] = tokens.pop.value
+          tokens.pop unless tokens.empty?
+        end
+
+        @args = {keyspace: keyspace_name, table: table_name, columns: select_columns, filter: filter}
       end
 
       def parenthesis_values(tokens, terminator)

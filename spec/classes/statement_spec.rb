@@ -73,6 +73,18 @@ module Cassandra
               expect(statement.args).to eq(keyspace: nil, columns: %w(pk1 ck1 field1), table: 'everything', filter: {})
             end
           end
+
+          context 'with a restriction' do
+            it 'should parse the restriction as a column filter' do
+              statement = Statement.new("SELECT * FROM everything WHERE pk1 = 'books'", [])
+              expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'everything', filter: {'pk1' => 'books'})
+            end
+
+            it 'should support multiple restrictions' do
+              statement = Statement.new("SELECT * FROM everything WHERE pk1 = 'cds' and ck1 = 'Rock'", [])
+              expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'everything', filter: {'pk1' => 'cds', 'ck1' => 'Rock'})
+            end
+          end
         end
 
       end
