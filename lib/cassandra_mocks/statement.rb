@@ -3,8 +3,6 @@ module Cassandra
     class Statement
       attr_reader :cql, :action, :args
 
-      PARENS_MATCHER = /\(\s*([^(]+)\s*\)/
-
       def initialize(cql, args)
         @cql = cql
 
