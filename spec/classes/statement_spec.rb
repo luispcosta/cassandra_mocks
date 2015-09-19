@@ -47,32 +47,53 @@ module Cassandra
           context 'with a restriction' do
             it 'should parse the restriction as a column filter' do
               statement = Statement.new("#{keyword} FROM everything WHERE pk1 = 'books'", [])
-              expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'everything', filter: {'pk1' => 'books'})
+              expect(statement.args).to include(filter: {'pk1' => 'books'})
             end
 
             it 'should support multiple restrictions' do
               statement = Statement.new("#{keyword} FROM everything WHERE pk1 = 'cds' and ck1 = 'Rock'", [])
-              expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'everything', filter: {'pk1' => 'cds', 'ck1' => 'Rock'})
+              expect(statement.args).to include(filter: {'pk1' => 'cds', 'ck1' => 'Rock'})
             end
 
             context 'when the restriction provided is a range' do
               it 'should support range restrictions using IN' do
                 statement = Statement.new("#{keyword} FROM everything WHERE pk1 = IN ('Videos', 'Games')", [])
-                expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'everything', filter: {'pk1' => %w(Videos Games)})
+                expect(statement.args).to include(filter: {'pk1' => %w(Videos Games)})
               end
 
               it 'should support parameterized restrictions' do
                 statement = Statement.new("#{keyword} FROM everything WHERE pk1 = IN (?, 'Games') and ck1 = ?", %w(Videos History))
-                expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'everything', filter: {'pk1' => %w(Videos Games), 'ck1' => 'History'})
+                expect(statement.args).to include(filter: {'pk1' => %w(Videos Games), 'ck1' => 'History'})
               end
             end
 
             it 'should support parameterized queries' do
               statement = Statement.new("#{keyword} FROM everything WHERE pk1 = 'cds' and ck1 = ?", ['Jazz'])
-              expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'everything', filter: {'pk1' => 'cds', 'ck1' => 'Jazz'})
+              expect(statement.args).to include(filter: {'pk1' => 'cds', 'ck1' => 'Jazz'})
             end
           end
 
+        end
+
+        shared_examples_for 'a query filtering a table' do |keyword|
+          it 'should parse the table argument' do
+            statement = Statement.new("#{keyword} FROM everything", [])
+            expect(statement.args).to include(table: 'everything')
+          end
+
+          context 'with a different table' do
+            it 'should parse the table and column arguments' do
+              statement = Statement.new("#{keyword} FROM my_table", [])
+              expect(statement.args).to include(table: 'my_table')
+            end
+          end
+
+          context 'with a namespaced table' do
+            it 'should parse the table and keyspace' do
+              statement = Statement.new("#{keyword} FROM lockspace.my_table", [])
+              expect(statement.args).to include(keyspace: 'lockspace', table: 'my_table')
+            end
+          end
         end
 
         context 'when the query is a SELECT query' do
@@ -81,33 +102,30 @@ module Cassandra
             expect(statement.action).to eq(:select)
           end
 
-          it 'should parse the table and column arguments' do
+          it 'should parse the column argument' do
             statement = Statement.new('SELECT * FROM everything', [])
-            expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'everything', filter: {})
-          end
-
-          context 'with a different table' do
-            it 'should parse the table and column arguments' do
-              statement = Statement.new('SELECT * FROM my_table', [])
-              expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'my_table', filter: {})
-            end
-          end
-
-          context 'with a namespaced table' do
-            it 'should parse the table and keyspace' do
-              statement = Statement.new('SELECT * FROM lockspace.my_table', [])
-              expect(statement.args).to eq(keyspace: 'lockspace', columns: %w(*), table: 'my_table', filter: {})
-            end
+            expect(statement.args).to include(columns: %w(*))
           end
 
           context 'with different columns' do
             it 'should parse the table and column arguments' do
               statement = Statement.new('SELECT pk1, ck1, field1 FROM everything', [])
-              expect(statement.args).to eq(keyspace: nil, columns: %w(pk1 ck1 field1), table: 'everything', filter: {})
+              expect(statement.args).to include(columns: %w(pk1 ck1 field1))
             end
           end
 
+          it_behaves_like 'a query filtering a table', 'SELECT *'
           it_behaves_like 'a query with a restriction', 'SELECT *'
+        end
+
+        context 'when the query is a DELETE query' do
+          it 'should be parsed as a delete' do
+            statement = Statement.new('DELETE * FROM everything WHERE something = ?', %w(nothing))
+            expect(statement.action).to eq(:delete)
+          end
+
+          it_behaves_like 'a query filtering a table', 'DELETE'
+          it_behaves_like 'a query with a restriction', 'DELETE'
         end
 
       end

@@ -12,6 +12,9 @@ module Cassandra
           parse_insert_query(args)
         elsif type_token.select?
           parse_select_query(args)
+        elsif type_token.delete?
+          next_token
+          parse_table_and_filter(args)
         end
       end
 
