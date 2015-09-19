@@ -42,6 +42,39 @@ module Cassandra
           end
         end
 
+        context 'when the query is a SELECT query' do
+          it 'should be parsed as an select' do
+            statement = Statement.new('SELECT * FROM everything', [55])
+            expect(statement.action).to eq(:select)
+          end
+
+          it 'should parse the table and column arguments' do
+            statement = Statement.new('SELECT * FROM everything', [])
+            expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'everything', filter: {})
+          end
+
+          context 'with a different table' do
+            it 'should parse the table and column arguments' do
+              statement = Statement.new('SELECT * FROM my_table', [])
+              expect(statement.args).to eq(keyspace: nil, columns: %w(*), table: 'my_table', filter: {})
+            end
+          end
+
+          context 'with a namespaced table' do
+            it 'should parse the table and keyspace' do
+              statement = Statement.new('SELECT * FROM lockspace.my_table', [])
+              expect(statement.args).to eq(keyspace: 'lockspace', columns: %w(*), table: 'my_table', filter: {})
+            end
+          end
+
+          context 'with different columns' do
+            it 'should parse the table and column arguments' do
+              statement = Statement.new('SELECT pk1, ck1, field1 FROM everything', [])
+              expect(statement.args).to eq(keyspace: nil, columns: %w(pk1 ck1 field1), table: 'everything', filter: {})
+            end
+          end
+        end
+
       end
 
     end
