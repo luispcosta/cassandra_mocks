@@ -28,7 +28,11 @@ module Cassandra
       end
 
       def next_token
-        !tokens.empty? && tokens.pop
+        if tokens.empty?
+          Token.new(:eof, nil)
+        else
+          tokens.pop
+        end
       end
 
       def parse_create_table
