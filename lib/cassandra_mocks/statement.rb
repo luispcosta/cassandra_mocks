@@ -8,7 +8,25 @@ module Cassandra
 
         type_token = next_token
         @action = type_token.type
-        if type_token.insert?
+        if type_token.create?
+          @action = :create_table
+          next_token
+          table_name = next_token.value
+
+          next_token
+          column_name = next_token.value
+          column_type = next_token.value
+          3.times { next_token }
+          additional_columns = if tokens.empty?
+                                 {}
+                               else
+                                 parenthesis_values(:rparen).each_slice(2).inject({}) do |memo, (name, type)|
+                                   memo.merge!(name => type)
+                                 end
+                               end
+
+          @args = {table: table_name, columns: additional_columns.merge({column_name => column_type}), primary_key: [[column_name]]}
+        elsif type_token.insert?
           parse_insert_query(args)
         elsif type_token.select?
           parse_select_query(args)

@@ -9,6 +9,44 @@ module Cassandra
           expect(Statement.new('SELECT * FROM everything', []).cql).to eq('SELECT * FROM everything')
         end
 
+        context 'when the query is a CREATE query' do
+          describe 'creating a table' do
+            it 'should be parsed as a create_table' do
+              statement = Statement.new('CREATE TABLE table_name (pk1 text PRIMARY KEY)', [])
+              expect(statement.action).to eq(:create_table)
+            end
+
+            it 'should parse out the table name' do
+              statement = Statement.new('CREATE TABLE table_name (pk1 text PRIMARY KEY)', [])
+              expect(statement.args).to include(table: 'table_name')
+            end
+
+            context 'with a different table name' do
+              it 'should parse out the table name' do
+                statement = Statement.new('CREATE TABLE products (pk1 text PRIMARY KEY)', [])
+                expect(statement.args).to include(table: 'products')
+              end
+            end
+
+            it 'should parse out the column definitions' do
+              statement = Statement.new('CREATE TABLE table_name (pk1 text PRIMARY KEY)', [])
+              expect(statement.args).to include(columns: {'pk1' => 'text'})
+            end
+
+            it 'should set the primary key' do
+              statement = Statement.new('CREATE TABLE table_name (pk1 text PRIMARY KEY)', [])
+              expect(statement.args).to include(primary_key: [['pk1']])
+            end
+
+            context 'with a different set of columns' do
+              it 'should parse all column definitions' do
+                statement = Statement.new('CREATE TABLE products (type text PRIMARY KEY, section text)', [])
+                expect(statement.args).to include(columns: {'type' => 'text', 'section' => 'text'})
+              end
+            end
+          end
+        end
+
         context 'when the query is an INSERT query' do
           it 'should be parsed as an insert' do
             statement = Statement.new("INSERT INTO table (  pk1, ck1  ) VALUES ('hello', ?)", [55])
