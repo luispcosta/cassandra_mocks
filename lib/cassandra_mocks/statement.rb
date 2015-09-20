@@ -59,7 +59,9 @@ module Cassandra
         if !tokens.empty? && next_token.key?
           next_token
           primary_key_parts = parenthesis_values(:rparen)
-          primary_key = [[primary_key_parts.shift], *primary_key_parts]
+          partition_key = primary_key_parts.shift
+          partition_key = [partition_key] unless partition_key.is_a?(Array)
+          primary_key = [partition_key, *primary_key_parts]
         end
 
         @args = {table: table_name, columns: additional_columns.merge({column_name => column_type}), primary_key: primary_key}
@@ -121,7 +123,11 @@ module Cassandra
       def parenthesis_values(*terminators)
         [].tap do |insert_values|
           until terminators.include?((key = next_token).type)
-            insert_values << key.value unless key.comma?
+            if key.lparen?
+              insert_values << parenthesis_values(:rparen)
+            elsif !key.comma?
+              insert_values << key.value unless key.comma?
+            end
           end
         end
       end

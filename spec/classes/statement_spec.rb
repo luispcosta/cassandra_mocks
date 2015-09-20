@@ -57,6 +57,13 @@ module Cassandra
                 statement = Statement.new('CREATE TABLE products (type text, section text, author text, PRIMARY KEY(type, section, author))', [])
                 expect(statement.args).to include(primary_key: [['type'], 'section', 'author'])
               end
+
+              context 'when the partition key is multi-part' do
+                it 'should parse out the partition key properly' do
+                  statement = Statement.new('CREATE TABLE products (type text, section text, PRIMARY KEY((type, section)))', [])
+                  expect(statement.args).to include(primary_key: [['type', 'section']])
+                end
+              end
             end
           end
         end
