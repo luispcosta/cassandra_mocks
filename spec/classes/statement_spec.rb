@@ -51,6 +51,13 @@ module Cassandra
                 expect(statement.args).to include(primary_key: [['section']])
               end
             end
+
+            context 'with a complex primary key' do
+              it 'should parse the clustering key as well' do
+                statement = Statement.new('CREATE TABLE products (type text, section text, author text, PRIMARY KEY(type, section, author))', [])
+                expect(statement.args).to include(primary_key: [['type'], 'section', 'author'])
+              end
+            end
           end
         end
 

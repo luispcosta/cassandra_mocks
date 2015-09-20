@@ -58,7 +58,8 @@ module Cassandra
 
         if !tokens.empty? && next_token.key?
           next_token
-          primary_key = [parenthesis_values(:rparen)]
+          primary_key_parts = parenthesis_values(:rparen)
+          primary_key = [[primary_key_parts.shift], *primary_key_parts]
         end
 
         @args = {table: table_name, columns: additional_columns.merge({column_name => column_type}), primary_key: primary_key}
