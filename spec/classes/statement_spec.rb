@@ -44,6 +44,13 @@ module Cassandra
                 expect(statement.args).to include(columns: {'type' => 'text', 'section' => 'text'})
               end
             end
+
+            context 'when the primary key is defined at the end' do
+              it 'should use that as the primary key' do
+                statement = Statement.new('CREATE TABLE products (type text, section text, PRIMARY KEY(section))', [])
+                expect(statement.args).to include(primary_key: [['section']])
+              end
+            end
           end
         end
 

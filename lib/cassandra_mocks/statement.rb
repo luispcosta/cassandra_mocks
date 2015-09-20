@@ -38,16 +38,26 @@ module Cassandra
         next_token
         column_name = next_token.value
         column_type = next_token.value
-        3.times { next_token }
+        primary_key = nil
+        if next_token.primary?
+          primary_key = [[column_name]]
+          2.times { next_token }
+        end
+
         additional_columns = if tokens.empty?
                                {}
                              else
-                               parenthesis_values(:rparen).each_slice(2).inject({}) do |memo, (name, type)|
+                               parenthesis_values(:rparen, :primary).each_slice(2).inject({}) do |memo, (name, type)|
                                  memo.merge!(name => type)
                                end
                              end
 
-        @args = {table: table_name, columns: additional_columns.merge({column_name => column_type}), primary_key: [[column_name]]}
+        if !tokens.empty? && next_token.key?
+          next_token
+          primary_key = [parenthesis_values(:rparen)]
+        end
+
+        @args = {table: table_name, columns: additional_columns.merge({column_name => column_type}), primary_key: primary_key}
       end
 
       def parse_insert_query(args)
@@ -103,9 +113,9 @@ module Cassandra
         @args = {keyspace: keyspace_name, table: table_name, filter: filter}
       end
 
-      def parenthesis_values(terminator)
+      def parenthesis_values(*terminators)
         [].tap do |insert_values|
-          until (key = next_token).type == terminator
+          until terminators.include?((key = next_token).type)
             insert_values << key.value unless key.comma?
           end
         end
