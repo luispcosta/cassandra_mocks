@@ -30,6 +30,8 @@ module Cassandra
             end
 
             it_behaves_like 'a token from a reserved keyword', 'CREATE', :create
+            it_behaves_like 'a token from a reserved keyword', 'PRIMARY', :primary
+            it_behaves_like 'a token from a reserved keyword', 'KEY', :key
             it_behaves_like 'a token from a reserved keyword', 'TABLE', :table
             it_behaves_like 'a token from a reserved keyword', 'KEYSPACE', :keyspace
             it_behaves_like 'a token from a reserved keyword', 'INSERT', :insert
