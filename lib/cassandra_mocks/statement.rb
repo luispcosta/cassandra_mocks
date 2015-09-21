@@ -9,8 +9,14 @@ module Cassandra
         type_token = next_token
         @action = type_token.type
         if type_token.create?
-          @action = :create_table
-          parse_create_table
+          create_type_token = next_token
+          if create_type_token.table?
+            @action = :create_table
+            parse_create_table
+          else
+            @action = :create_keyspace
+            @args = {keyspace: next_token.value}
+          end
         elsif type_token.insert?
           parse_insert_query(args)
         elsif type_token.select?
@@ -36,7 +42,6 @@ module Cassandra
       end
 
       def parse_create_table
-        next_token
         table_name = next_token.value
 
         next_token

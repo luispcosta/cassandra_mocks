@@ -66,6 +66,25 @@ module Cassandra
               end
             end
           end
+
+          describe 'creating a keyspace' do
+            it 'should be parsed as a create_table' do
+              statement = Statement.new("CREATE KEYSPACE keyspace_name WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 }", [])
+              expect(statement.action).to eq(:create_keyspace)
+            end
+
+            it 'should parse out the keyspace name' do
+              statement = Statement.new("CREATE KEYSPACE keyspace_name WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 }", [])
+              expect(statement.args).to include(keyspace: 'keyspace_name')
+            end
+
+            context 'with a different keyspace' do
+              it 'should parse out the keyspace name' do
+                statement = Statement.new("CREATE KEYSPACE production_keyspace WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 }", [])
+                expect(statement.args).to include(keyspace: 'production_keyspace')
+              end
+            end
+          end
         end
 
         context 'when the query is an INSERT query' do
