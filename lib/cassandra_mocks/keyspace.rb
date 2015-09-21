@@ -3,16 +3,16 @@ module Cassandra
     class Keyspace < ::Cassandra::Keyspace
 
       def initialize(name)
-        replication = Cassandra::Keyspace::Replication.new('mock', {})
+        replication = Replication.new('mock', {})
         super(name, false, replication, {})
       end
 
-      def add_table(name, primary_key, columns)
+      def add_table(table_name, primary_key, columns)
         partition_key = primary_key.shift
         partition_key_columns = partition_key_part(columns, partition_key)
         clustering_columns = partition_key_part(columns, primary_key)
         fields = fields(columns, partition_key, primary_key)
-        @tables[name] = Cassandra::Mocks::Table.new(self.name, name, partition_key_columns, clustering_columns, fields)
+        @tables[table_name] = Table.new(name, table_name, partition_key_columns, clustering_columns, fields)
       end
 
       private
