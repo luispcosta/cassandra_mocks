@@ -9,14 +9,20 @@ module Cassandra
 
       def add_table(name, primary_key, columns)
         partition_key = primary_key.shift
-        partition_key_columns = partition_key.map { |name| Cassandra::Column.new(name, columns[name], :asc) }
-        clustering_columns = primary_key.map { |name| Cassandra::Column.new(name, columns[name], :asc) }
-        fields = columns.except(partition_key + primary_key).map { |name, type| Cassandra::Column.new(name, type, :asc) }
-        @tables[name] = Cassandra::Mocks::Table.new(self.name,
-                                             name,
-                                             partition_key_columns,
-                                             clustering_columns,
-                                             fields)
+        partition_key_columns = partition_key_part(columns, partition_key)
+        clustering_columns = partition_key_part(columns, primary_key)
+        fields = fields(columns, partition_key, primary_key)
+        @tables[name] = Cassandra::Mocks::Table.new(self.name, name, partition_key_columns, clustering_columns, fields)
+      end
+
+      private
+
+      def partition_key_part(columns, primary_key)
+        primary_key.map { |name| Cassandra::Column.new(name, columns[name], :asc) }
+      end
+
+      def fields(columns, partition_key, primary_key)
+        columns.except(partition_key + primary_key).map { |name, type| Cassandra::Column.new(name, type, :asc) }
       end
 
     end
