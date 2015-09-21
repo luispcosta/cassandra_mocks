@@ -1,15 +1,16 @@
 module Cassandra
   module Mocks
     class Cluster
+      extend Forwardable
 
-      attr_reader :keyspaces
+      def_delegator :@keyspaces, :[], :keyspace
 
       def initialize
-        @keyspaces = []
+        @keyspaces = {}
       end
 
       def add_keyspace(name)
-        keyspaces << Keyspace.new(name)
+        @keyspaces[name] = Keyspace.new(name)
       end
 
     end
