@@ -27,6 +27,12 @@ module Cassandra
         end
       end
 
+      def ==(rhs)
+        rhs.is_a?(Statement) &&
+            rhs.action == action &&
+            rhs.args == args
+      end
+
       private
 
       def tokens
