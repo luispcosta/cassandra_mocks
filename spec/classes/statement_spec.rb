@@ -198,7 +198,7 @@ module Cassandra
 
         context 'when the query is a DELETE query' do
           it 'should be parsed as a delete' do
-            statement = Statement.new('DELETE * FROM everything WHERE something = ?', %w(nothing))
+            statement = Statement.new('DELETE FROM everything WHERE something = ?', %w(nothing))
             expect(statement.action).to eq(:delete)
           end
 
@@ -206,6 +206,53 @@ module Cassandra
           it_behaves_like 'a query with a restriction', 'DELETE'
         end
 
+        context 'when arguments are specified at a later time' do
+          subject { Statement.new('DELETE FROM everything WHERE something = ?', []) }
+
+          it 'should nullify the cql params' do
+            expect(subject.args).to include(filter: {'something' => nil})
+          end
+        end
+
+      end
+
+      describe '#fill_params' do
+        let(:args) { %w(nothing something) }
+        let(:original_statement) { Statement.new('DELETE FROM everything WHERE something = ? AND nothing = ?', []) }
+
+        subject { original_statement.fill_params(args) }
+
+        it 'should duplicate the cql' do
+          expect(subject.cql).to eq(original_statement.cql)
+        end
+
+        it 'should duplicate the action' do
+          expect(subject.action).to eq(original_statement.action)
+        end
+
+        it 'should duplicate the args, with the params filled in' do
+          expect(subject.args).to eq(original_statement.args.merge(filter: {'something' => 'nothing', 'nothing' => 'something'}))
+        end
+
+        context 'with different args' do
+          let(:args) { ['something good', 'nothing bad'] }
+
+          it 'should duplicate the args, with the params filled in' do
+            expect(subject.args).to eq(original_statement.args.merge(filter: {'something' => 'something good', 'nothing' => 'nothing bad'}))
+          end
+        end
+
+        context 'with a different query' do
+          let(:original_statement) do
+            Statement.new("SELECT * FROM everything WHERE section = ? AND genre = 'Romance' AND shard = ?", [])
+          end
+          let(:args) { %w(Books abcdefg) }
+
+          it 'should duplicate the args, with the params filled in' do
+            expected_filter = {'section' => 'Books', 'genre' => 'Romance', 'shard' => 'abcdefg'}
+            expect(subject.args).to eq(original_statement.args.merge(filter: expected_filter))
+          end
+        end
       end
 
     end

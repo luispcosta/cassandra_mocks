@@ -27,11 +27,27 @@ module Cassandra
         end
       end
 
+      def fill_params(params)
+        Statement.allocate.tap do |statement|
+          statement.cql = cql
+          statement.action = action
+          params = param_queue(params)
+          filter = args[:filter].inject({}) do |memo, (column, value)|
+            memo.merge!(column => (value || params.pop))
+          end
+          statement.args = args.merge(filter: filter)
+        end
+      end
+
       def ==(rhs)
         rhs.is_a?(Statement) &&
             rhs.action == action &&
             rhs.args == args
       end
+
+      protected
+
+      attr_writer :cql, :action, :args
 
       private
 
@@ -160,7 +176,11 @@ module Cassandra
       end
 
       def parameterized_value(args, value)
-        (value == '?') ? args.pop : value
+        if value == '?'
+          args.pop unless args.empty?
+        else
+          value
+        end
       end
 
       def param_queue(args)
