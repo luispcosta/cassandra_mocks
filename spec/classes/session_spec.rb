@@ -156,6 +156,52 @@ module Cassandra
             end
           end
         end
+
+        describe 'with an INSERT query' do
+          let(:keyspace) { 'development' }
+          let(:table_keyspace) { keyspace }
+          let(:table_name) { 'books' }
+          let!(:table) do
+            cluster.add_keyspace(keyspace)
+            cluster.add_keyspace(table_keyspace)
+            cluster.keyspace(table_keyspace).tap { |ks| ks.add_table(table_name, primary_key, columns) }.table(table_name)
+          end
+          let(:primary_key) { [['section'], 'genre'] }
+          let(:columns) { {'section' => 'text', 'genre' => 'text', 'description' => 'text'} }
+          let(:column_count) { columns.count }
+          let(:column_names) { columns.keys }
+          let(:column_values) { columns.keys.map { SecureRandom.uuid } }
+          let(:expected_row) do
+            column_count.times.inject({}) do |memo, index|
+              memo.merge!(column_names[index] => column_values[index])
+            end
+          end
+          let(:query) { "INSERT INTO #{table_name} (#{column_names*','}) VALUES (#{column_values*','})" }
+
+          it 'should add a row into the specified table' do
+            subject.execute_async(query).get
+            expect(table.rows).to eq([expected_row])
+          end
+
+          context 'with a different table' do
+            let(:table_name) { 'products' }
+
+            it 'should add a row into the specified table' do
+              subject.execute_async(query).get
+              expect(table.rows).to eq([expected_row])
+            end
+          end
+
+          context 'with a namespaced table' do
+            let(:table_keyspace) { 'counters' }
+            let(:query) { "INSERT INTO #{table_keyspace}.#{table_name} (#{column_names*','}) VALUES (#{column_values*','})" }
+
+            it 'should add a row into the specified table' do
+              subject.execute_async(query).get
+              expect(table.rows).to eq([expected_row])
+            end
+          end
+        end
       end
 
       describe '#execute' do
