@@ -136,7 +136,7 @@ module Cassandra
         keyspace_name = nil
 
         table_name = next_token.value
-        if (token = next_token) && token.dot?
+        if next_token.dot?
           keyspace_name = table_name
           table_name = next_token.value
         end
