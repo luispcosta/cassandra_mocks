@@ -41,6 +41,16 @@ module Cassandra
         @rows ||= []
       end
 
+      # make #partition_key public
+      def partition_key
+        super
+      end
+
+      # make #clustering_columns public
+      def clustering_columns
+        super
+      end
+
       private
 
       def validate_columns!(attributes)
