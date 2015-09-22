@@ -18,14 +18,7 @@ module Cassandra
             @args = {keyspace: next_token.value}
           end
         elsif type_token.truncate?
-          keyspace_name = nil
-          table_name = next_token.value
-          if next_token.dot?
-            keyspace_name = table_name
-            table_name = next_token.value
-          end
-
-          @args = { keyspace: keyspace_name, table: table_name }
+          parse_truncate_query
         elsif type_token.insert?
           parse_insert_query(args)
         elsif type_token.select?
@@ -101,6 +94,17 @@ module Cassandra
         end
 
         @args = {table: table_name, columns: additional_columns.merge({column_name => column_type}), primary_key: primary_key}
+      end
+
+      def parse_truncate_query
+        keyspace_name = nil
+        table_name = next_token.value
+        if next_token.dot?
+          keyspace_name = table_name
+          table_name = next_token.value
+        end
+
+        @args = {keyspace: keyspace_name, table: table_name}
       end
 
       def parse_insert_query(args)
