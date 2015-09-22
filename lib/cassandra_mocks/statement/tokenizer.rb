@@ -5,6 +5,7 @@ module Cassandra
         #noinspection RubyStringKeysInHashInspection
         KEYWORD_MAP = {
             'CREATE' => :create,
+            'TRUNCATE' => :truncate,
             'PRIMARY' => :primary,
             'KEY' => :key,
             'TABLE' => :table,
