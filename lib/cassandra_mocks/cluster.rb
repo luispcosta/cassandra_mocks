@@ -13,6 +13,10 @@ module Cassandra
         @keyspaces[name] = Keyspace.new(name)
       end
 
+      def each_keyspace(&block)
+        @keyspaces.values.each(&block)
+      end
+
     end
   end
 end
