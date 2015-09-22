@@ -87,6 +87,39 @@ module Cassandra
           end
         end
 
+        context 'when the query is a TRUNCATE query' do
+          it 'should be parsed as a truncate' do
+            statement = Statement.new('TRUNCATE table', [])
+            expect(statement.action).to eq(:truncate)
+          end
+
+          it 'should parse out the table name' do
+            statement = Statement.new('TRUNCATE table', [])
+            expect(statement.args).to include(table: 'table')
+          end
+
+          context 'with a different table name' do
+            it 'should parse out the table name' do
+              statement = Statement.new('TRUNCATE books', [])
+              expect(statement.args).to include(table: 'books')
+            end
+          end
+
+          context 'with a namespaced table' do
+            it 'should parse out the table name and keyspace' do
+              statement = Statement.new('TRUNCATE keyspace.books', [])
+              expect(statement.args).to include(keyspace: 'keyspace', table: 'books')
+            end
+
+            context 'with a different keyspace' do
+              it 'should parse out the table name and keyspace' do
+                statement = Statement.new('TRUNCATE staging.products', [])
+                expect(statement.args).to include(keyspace: 'staging', table: 'products')
+              end
+            end
+          end
+        end
+
         context 'when the query is an INSERT query' do
           it 'should be parsed as an insert' do
             statement = Statement.new("INSERT INTO table (  pk1, ck1  ) VALUES ('hello', ?)", [55])

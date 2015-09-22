@@ -17,6 +17,15 @@ module Cassandra
             @action = :create_keyspace
             @args = {keyspace: next_token.value}
           end
+        elsif type_token.truncate?
+          keyspace_name = nil
+          table_name = next_token.value
+          if next_token.dot?
+            keyspace_name = table_name
+            table_name = next_token.value
+          end
+
+          @args = { keyspace: keyspace_name, table: table_name }
         elsif type_token.insert?
           parse_insert_query(args)
         elsif type_token.select?
