@@ -18,7 +18,11 @@ module Cassandra
 
       def execute_async(cql)
         prepare_async(cql).then do |statement|
-          @cluster.add_keyspace(statement.args[:keyspace])
+          if statement.action == :create_keyspace
+            @cluster.add_keyspace(statement.args[:keyspace])
+          else
+            @cluster.keyspace(keyspace).add_table(statement.args[:table], statement.args[:primary_key], statement.args[:columns])
+          end
         end
       end
 

@@ -82,6 +82,80 @@ module Cassandra
             end
           end
         end
+
+        describe 'with a CREATE TABLE query' do
+          let(:keyspace) { 'keyspace' }
+          let(:table_name) { 'table_name' }
+          let(:query) { "CREATE TABLE #{table_name} (pk1 text, ck1 text, field1 text, PRIMARY KEY(pk1, ck1))" }
+          let(:table_name) { 'table_name' }
+          let(:partition_key) { {'pk1' => 'text'} }
+          let(:clustering_columns) { {'ck1' => 'text'} }
+          let(:fields) { {'field1' => 'text'} }
+          let(:expected_table) do
+            Table.new(keyspace, table_name, create_columns(partition_key), create_columns(clustering_columns), create_columns(fields))
+          end
+
+          before { cluster.add_keyspace(keyspace) }
+
+          it 'should create the table with the specified params' do
+            subject.execute_async(query).get
+            table = cluster.keyspace(keyspace).table('table_name')
+            expect(table).to eq(expected_table)
+          end
+
+          context 'with a different keyspace' do
+            let(:keyspace) { 'development' }
+
+            it 'should create the table with the specified params' do
+              subject.execute_async(query).get
+              table = cluster.keyspace(keyspace).table('table_name')
+              expect(table.keyspace).to eq(keyspace)
+            end
+          end
+
+          context 'with a different table name' do
+            let(:table_name) { 'books' }
+
+            it 'should create the table with the specified table name' do
+              subject.execute_async(query).get
+              table = cluster.keyspace(keyspace).table('books')
+              expect(table.name).to eq(table_name)
+            end
+          end
+
+          context 'with a different partition key' do
+            let(:query) { 'CREATE TABLE table_name (section text, region_number int, location text, PRIMARY KEY((section, region_number), location))' }
+
+            it 'should create the table with the specified partition key' do
+              subject.execute_async(query).get
+              table = cluster.keyspace(keyspace).table('table_name')
+              expect(table.partition_key.map(&:name)).to eq(%w(section region_number))
+            end
+          end
+
+          context 'with different clustering columns' do
+            let(:query) { 'CREATE TABLE table_name (section text, region_number int, location text, PRIMARY KEY(section, region_number, location))' }
+
+            it 'should create the table with the specified clustering columns' do
+              subject.execute_async(query).get
+              table = cluster.keyspace(keyspace).table('table_name')
+              expect(table.clustering_columns.map(&:name)).to eq(%w(region_number location))
+            end
+          end
+
+          context 'with a different column structure' do
+            let(:query) { 'CREATE TABLE table_name (section text, region_number int, location text, address text, PRIMARY KEY(section, region_number, location))' }
+            let(:partition_key) { {'section' => 'text'} }
+            let(:clustering_columns) { {'region_number' => 'int', 'location' => 'text'} }
+            let(:fields) { {'address' => 'text'} }
+
+            it 'should create the table with the specified columns' do
+              subject.execute_async(query).get
+              table = cluster.keyspace(keyspace).table('table_name')
+              expect(table).to eq(expected_table)
+            end
+          end
+        end
       end
 
       describe '#execute' do
@@ -101,6 +175,12 @@ module Cassandra
             expect(subject.execute(query)).to eq(['results'])
           end
         end
+      end
+
+      private
+
+      def create_columns(columns)
+        columns.map { |key, value| Cassandra::Column.new(key, value, :asc) }
       end
 
     end
