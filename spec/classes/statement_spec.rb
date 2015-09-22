@@ -140,6 +140,13 @@ module Cassandra
               expect(statement.args).to include(filter: {'pk1' => 'cds', 'ck1' => 'Rock'})
             end
 
+            context 'when the filter contains numerics' do
+              it 'should parse the filter' do
+                statement = Statement.new("#{keyword} FROM everything WHERE pk1 = 5 and ck1 = 4.23", [])
+                expect(statement.args).to include(filter: {'pk1' => 5, 'ck1' => 4.23})
+              end
+            end
+
             context 'when the restriction provided is a range' do
               it 'should support range restrictions using IN' do
                 statement = Statement.new("#{keyword} FROM everything WHERE pk1 = IN ('Videos', 'Games')", [])

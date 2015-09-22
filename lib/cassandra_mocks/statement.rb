@@ -138,7 +138,7 @@ module Cassandra
             next_token
             filter_values << parenthesis_values(:rparen)
           else
-            filter_values << value_token.value
+            filter_values << value_token.normalized_value
           end
           next_token unless tokens.empty?
         end
