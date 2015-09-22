@@ -153,7 +153,7 @@ module Cassandra
             if key.lparen?
               insert_values << parenthesis_values(:rparen)
             elsif !key.comma?
-              insert_values << key.value unless key.comma?
+              insert_values << key.normalized_value unless key.comma?
             end
           end
         end

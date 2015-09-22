@@ -112,6 +112,13 @@ module Cassandra
             end
           end
 
+          context 'with numeric parameters' do
+            it 'should map the key value pairs into the table from the parsed query' do
+              statement = Statement.new('INSERT INTO other_table (category, message_index) VALUES   (5, 102443)', [])
+              expect(statement.args).to eq(keyspace: nil, table: 'other_table', values: {'category' => 5, 'message_index' => 102443})
+            end
+          end
+
           context 'with a parameterized query' do
             it 'should apply query parameters to the parsed query' do
               statement = Statement.new("INSERT INTO table (category, message, sub_message) VALUES ('goodbye', ?, ?)", %w(world cruel))
