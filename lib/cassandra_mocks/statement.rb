@@ -97,26 +97,16 @@ module Cassandra
       end
 
       def parse_truncate_query
-        keyspace_name = nil
-        table_name = next_token.value
-        if next_token.dot?
-          keyspace_name = table_name
-          table_name = next_token.value
-        end
+        keyspace_name, table_name = parsed_keyspace_and_table
 
         @args = {keyspace: keyspace_name, table: table_name}
       end
 
       def parse_insert_query(args)
-        keyspace_name = nil
-
         next_token
-        table_name = next_token.value
-        if next_token.dot?
-          keyspace_name = table_name
-          table_name = next_token.value
-          next_token
-        end
+
+        keyspace_name, table_name = parsed_keyspace_and_table
+        next_token unless keyspace_name.nil?
 
         insert_keys = parenthesis_values(:rparen)
         2.times { next_token }
@@ -133,13 +123,7 @@ module Cassandra
       end
 
       def parse_table_and_filter(args)
-        keyspace_name = nil
-
-        table_name = next_token.value
-        if next_token.dot?
-          keyspace_name = table_name
-          table_name = next_token.value
-        end
+        keyspace_name, table_name = parsed_keyspace_and_table
 
         filter_keys = []
         filter_values = []
@@ -158,6 +142,16 @@ module Cassandra
         filter = insert_args(filter_keys, filter_values, args)
 
         @args = {keyspace: keyspace_name, table: table_name, filter: filter}
+      end
+
+      def parsed_keyspace_and_table
+        keyspace_name = nil
+        table_name = next_token.value
+        if next_token.dot?
+          keyspace_name = table_name
+          table_name = next_token.value
+        end
+        [keyspace_name, table_name]
       end
 
       def parenthesis_values(*terminators)
