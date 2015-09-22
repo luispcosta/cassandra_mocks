@@ -202,6 +202,46 @@ module Cassandra
             end
           end
         end
+
+        context 'with a TRUNCATE query' do
+          let(:query) { "TRUNCATE #{table_name}" }
+          let(:keyspace) { 'development' }
+          let(:table_keyspace) { keyspace }
+          let(:table_name) { 'books' }
+          let!(:table) do
+            cluster.add_keyspace(keyspace)
+            cluster.add_keyspace(table_keyspace)
+            cluster.keyspace(table_keyspace).tap do |ks|
+              ks.add_table(table_name, [['pk1'], 'ck1'], {'pk1' => 'text', 'ck1' => 'text'})
+            end.table(table_name)
+          end
+
+          before { table.insert('pk1' => 'hello', 'ck1' => 'world') }
+
+          it 'should empty all rows in the table' do
+            subject.execute_async(query).get
+            expect(table.rows).to be_empty
+          end
+
+          context 'with a different table name' do
+            let(:table_name) { 'products' }
+
+            it 'should empty all rows in the table' do
+              subject.execute_async(query).get
+              expect(table.rows).to be_empty
+            end
+          end
+
+          context 'with a namespaced table' do
+            let(:table_keyspace) { 'counters' }
+            let(:query) { "TRUNCATE #{table_keyspace}.#{table_name}" }
+
+            it 'should empty all rows in the table' do
+              subject.execute_async(query).get
+              expect(table.rows).to be_empty
+            end
+          end
+        end
       end
 
       describe '#execute' do

@@ -25,6 +25,8 @@ module Cassandra
               @cluster.keyspace(keyspace).add_table(statement.args[:table], statement.args[:primary_key], statement.args[:columns])
             when :insert
               @cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).insert(statement.args[:values])
+            when :truncate
+              @cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).rows.clear
           end
         end
       end
