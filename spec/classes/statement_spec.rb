@@ -319,6 +319,52 @@ module Cassandra
           it_behaves_like 'a query with a restriction', 'DELETE'
         end
 
+        context 'when the query is an UPDATE query' do
+          it 'should be parsed as a delete' do
+            statement = Statement.new('UPDATE table SET field1 = 55 WHERE pk1 = 19', [])
+            expect(statement.action).to eq(:update)
+          end
+
+          it 'should parse out the table name' do
+            statement = Statement.new('UPDATE table SET field1 = 55 WHERE pk1 = 19', [])
+            expect(statement.args).to include(table: 'table')
+          end
+
+          context 'with a different table' do
+            it 'should parse out the table name' do
+              statement = Statement.new('UPDATE products SET field1 = 55 WHERE pk1 = 19', [])
+              expect(statement.args).to include(table: 'products')
+            end
+          end
+
+          context 'with a namespaced table' do
+            it 'should parse out the table name and keyspace' do
+              statement = Statement.new('UPDATE keys.products SET field1 = 55 WHERE pk1 = 19', [])
+              expect(statement.args).to include(keyspace: 'keys', table: 'products')
+            end
+
+            context 'with a different keyspace' do
+              it 'should parse out the table name and keyspace' do
+                statement = Statement.new('UPDATE counters.product_counts SET field1 = 55 WHERE pk1 = 19', [])
+                expect(statement.args).to include(keyspace: 'counters', table: 'product_counts')
+              end
+            end
+          end
+
+          it 'should parse out the columns to update with the specified values' do
+            statement = Statement.new('UPDATE table SET field1 = 55 WHERE pk1 = 45', [])
+            expect(statement.args).to include(values: {'field1' => 55})
+          end
+
+          context 'with a different column update' do
+            it 'should parse out the columns to update with the specified values' do
+              statement = Statement.new("UPDATE table SET other_field = 47, description = 'great!' WHERE pk1 = 'partitioner'", [])
+              expect(statement.args).to include(values: {'other_field' => 47, 'description' => 'great!'})
+            end
+          end
+
+        end
+
         describe 'queries to be filled in later' do
           context 'when arguments are specified at a later time' do
             subject { Statement.new('DELETE FROM everything WHERE something = ?', []) }

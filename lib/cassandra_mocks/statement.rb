@@ -22,13 +22,17 @@ module Cassandra
         elsif type_token.drop?
           if next_token.keyspace?
             @action = :drop_keyspace
-            @args = { keyspace: next_token.value }
+            @args = {keyspace: next_token.value}
           else
             @action = :drop_table
             parse_truncate_query
           end
         elsif type_token.insert?
           parse_insert_query(args)
+        elsif type_token.update?
+          keyspace_name, table_name = parsed_keyspace_and_table
+          filter, _ = parsed_filter(args, :where)
+          @args = {keyspace: keyspace_name, table: table_name, values: filter}
         elsif type_token.select?
           parse_select_query(args)
         elsif type_token.delete?
@@ -145,10 +149,21 @@ module Cassandra
       def parse_table_and_filter(args)
         keyspace_name, table_name = parsed_keyspace_and_table
 
+        filter, prev_token = parsed_filter(args, :limit)
+
+        if prev_token.limit?
+          limit = next_token.normalized_value
+          @args = {keyspace: keyspace_name, table: table_name, filter: filter, limit: limit}
+        else
+          @args = {keyspace: keyspace_name, table: table_name, filter: filter}
+        end
+      end
+
+      def parsed_filter(args, end_token)
         filter_keys = []
         filter_values = []
         prev_token = last_token
-        until tokens.empty? || prev_token.limit?
+        until tokens.empty? || prev_token.type == end_token
           filter_keys << next_token.value
           next_token
           value_token = next_token
@@ -162,13 +177,7 @@ module Cassandra
         end
 
         filter = insert_args(filter_keys, filter_values, args)
-
-        if prev_token.limit?
-          limit = next_token.normalized_value
-          @args = {keyspace: keyspace_name, table: table_name, filter: filter, limit: limit}
-        else
-          @args = {keyspace: keyspace_name, table: table_name, filter: filter}
-        end
+        [filter, prev_token]
       end
 
       def parsed_keyspace_and_table
