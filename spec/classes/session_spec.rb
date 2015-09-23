@@ -8,6 +8,8 @@ module Cassandra
 
       subject { Session.new(keyspace, cluster) }
 
+      its(:cluster) { is_expected.to eq(cluster) }
+
       describe '#keyspace' do
         its(:keyspace) { is_expected.to be_nil }
 

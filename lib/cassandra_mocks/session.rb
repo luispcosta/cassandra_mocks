@@ -1,7 +1,7 @@
 module Cassandra
   module Mocks
     class Session
-      attr_reader :keyspace
+      attr_reader :keyspace, :cluster
 
       def initialize(keyspace, cluster)
         @keyspace = keyspace
@@ -21,15 +21,15 @@ module Cassandra
         future.then do |statement|
           case statement.action
             when :create_keyspace
-              @cluster.add_keyspace(statement.args[:keyspace])
+              cluster.add_keyspace(statement.args[:keyspace])
             when :create_table
-              @cluster.keyspace(keyspace).add_table(statement.args[:table], statement.args[:primary_key], statement.args[:columns])
+              cluster.keyspace(keyspace).add_table(statement.args[:table], statement.args[:primary_key], statement.args[:columns])
             when :insert
-              @cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).insert(statement.args[:values])
+              cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).insert(statement.args[:values])
             when :truncate
-              @cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).rows.clear
+              cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).rows.clear
             when :select
-              table = @cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table])
+              table = cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table])
               table.select(*statement.args[:columns], statement.args[:filter].merge(limit: statement.args[:limit]))
           end
         end
