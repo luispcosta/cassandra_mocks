@@ -245,6 +245,27 @@ module Cassandra
           end
         end
 
+        context 'with a DROP keyspace query' do
+          let(:keyspace) { 'keys' }
+          let(:query) { "DROP KEYSPACE #{keyspace}" }
+
+          before { cluster.add_keyspace(keyspace) }
+
+          it 'should delete the keyspace' do
+            subject.execute_async(query).get
+            expect(cluster.keyspace(keyspace)).to be_nil
+          end
+
+          context 'with a different keyspace' do
+            let(:keyspace) { 'locks' }
+
+            it 'should delete the keyspace' do
+              subject.execute_async(query).get
+              expect(cluster.keyspace(keyspace)).to be_nil
+            end
+          end
+        end
+
         context 'with a SELECT query' do
           let(:query) { "SELECT * FROM #{table_name}" }
           let(:primary_key) { [['pk1'], 'ck1'] }

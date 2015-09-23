@@ -28,6 +28,8 @@ module Cassandra
               cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).insert(statement.args[:values])
             when :truncate
               cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).rows.clear
+            when :drop_keyspace
+              cluster.drop_keyspace(statement.args[:keyspace])
             when :select
               table = cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table])
               table.select(*statement.args[:columns], statement.args[:filter].merge(limit: statement.args[:limit]))
