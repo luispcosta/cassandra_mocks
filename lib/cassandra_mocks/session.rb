@@ -43,6 +43,12 @@ module Cassandra
         execute_async(cql).get
       end
 
+      def ==(rhs)
+        rhs.is_a?(Session) &&
+            rhs.keyspace == keyspace &&
+            rhs.cluster == cluster
+      end
+
     end
   end
 end

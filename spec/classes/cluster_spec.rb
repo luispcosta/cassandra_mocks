@@ -4,6 +4,44 @@ module Cassandra
   module Mocks
     describe Cluster do
 
+      describe '#connect_async' do
+        let(:cluster) { Cluster.new }
+        let(:keyspace) { nil }
+        subject { cluster.connect_async(keyspace) }
+
+        it { is_expected.to be_a_kind_of(Cassandra::Future) }
+
+        it 'should create a new session with the specified keyspace' do
+          expect(subject.get).to eq(Session.new(keyspace, cluster))
+        end
+
+        context 'with a different keyspace' do
+          let(:keyspace) { 'keys' }
+
+          it 'should create a new session with the specified keyspace' do
+            expect(subject.get).to eq(Session.new(keyspace, cluster))
+          end
+        end
+      end
+
+      describe '#connect' do
+        let(:cluster) { Cluster.new }
+        let(:keyspace) { nil }
+        subject { cluster.connect(keyspace) }
+
+        it 'should create a new session with the specified keyspace' do
+          expect(subject).to eq(Session.new(keyspace, cluster))
+        end
+
+        context 'with a different keyspace' do
+          let(:keyspace) { 'keys' }
+
+          it 'should create a new session with the specified keyspace' do
+            expect(subject).to eq(Session.new(keyspace, cluster))
+          end
+        end
+      end
+
       describe '#add_keyspace' do
         it 'should add a keyspace with the specified name' do
           subject.add_keyspace('keyspace')
