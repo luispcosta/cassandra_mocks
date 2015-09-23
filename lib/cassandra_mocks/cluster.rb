@@ -9,12 +9,12 @@ module Cassandra
         @keyspaces = {}
       end
 
-      def connect_async(keyspace)
+      def connect_async(keyspace = nil)
         session = Session.new(keyspace, self)
         Cassandra::Future.value(session)
       end
 
-      def connect(keyspace)
+      def connect(keyspace = nil)
         connect_async(keyspace).get
       end
 

@@ -15,6 +15,14 @@ module Cassandra
           expect(subject.get).to eq(Session.new(keyspace, cluster))
         end
 
+        context 'with no keyspace' do
+          subject { cluster.connect_async }
+
+          it 'should default the keyspace to nil' do
+            expect(subject.get).to eq(Session.new(nil, cluster))
+          end
+        end
+
         context 'with a different keyspace' do
           let(:keyspace) { 'keys' }
 
@@ -31,6 +39,14 @@ module Cassandra
 
         it 'should create a new session with the specified keyspace' do
           expect(subject).to eq(Session.new(keyspace, cluster))
+        end
+
+        context 'with no keyspace' do
+          subject { cluster.connect }
+
+          it 'should default the keyspace to nil' do
+            expect(subject).to eq(Session.new(nil, cluster))
+          end
         end
 
         context 'with a different keyspace' do
