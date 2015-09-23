@@ -28,7 +28,12 @@ module Cassandra
             when :truncate
               @cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).rows.clear
             when :select
-              @cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).select(*statement.args[:columns])
+              table = @cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table])
+              if statement.args[:filter].empty?
+                table.select(*statement.args[:columns])
+              else
+                table.select(*statement.args[:columns], statement.args[:filter])
+              end
           end
         end
       end

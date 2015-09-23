@@ -311,6 +311,27 @@ module Cassandra
             end
           end
 
+          context 'with a filter' do
+            let(:rows) do
+              [{'pk1' => 'other partition', 'ck1' => 'clustering', 'field1' => 'extra data'},
+               {'pk1' => 'other partition', 'ck1' => 'other clustering', 'field1' => 'dreams field'}]
+            end
+            let(:query) { "SELECT * FROM books WHERE pk1 = 'other partition' AND ck1 = 'clustering'" }
+
+            it 'should filter the query results by the provided restriction' do
+              expected_row = {'pk1' => 'other partition', 'ck1' => 'clustering', 'field1' => 'extra data'}
+              expect(subject.execute_async(query).get).to eq([expected_row])
+            end
+
+            context 'with a different filter' do
+              let(:query) { "SELECT * FROM books WHERE pk1 = 'other partition' AND ck1 = 'other clustering'" }
+
+              it 'should filter the query results by the provided restriction' do
+                expected_row = {'pk1' => 'other partition', 'ck1' => 'other clustering', 'field1' => 'dreams field'}
+                expect(subject.execute_async(query).get).to eq([expected_row])
+              end
+            end
+          end
         end
       end
 
