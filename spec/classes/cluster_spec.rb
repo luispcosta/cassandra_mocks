@@ -18,6 +18,26 @@ module Cassandra
         end
       end
 
+      describe '#drop_keyspace' do
+        let(:keyspace) { 'keyspace' }
+
+        before { subject.add_keyspace(keyspace) }
+
+        it 'should remove a keyspace with the specified name' do
+          subject.drop_keyspace('keyspace')
+          expect(subject.keyspace('keyspace')).to be_nil
+        end
+
+        context 'with a different keyspace name' do
+          let(:keyspace) { 'counters' }
+
+          it 'should add a keyspace with the specified name' do
+            subject.drop_keyspace('counters')
+            expect(subject.keyspace('counters')).to be_nil
+          end
+        end
+      end
+
       describe '#each_keyspace' do
         let(:keyspaces) { %w(ks1 ks2) }
 
