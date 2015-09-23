@@ -243,7 +243,7 @@ module Cassandra
           end
         end
 
-        describe 'with a SELECT query' do
+        context 'with a SELECT query' do
           let(:query) { "SELECT * FROM #{table_name}" }
           let(:primary_key) { [['pk1'], 'ck1'] }
           let(:columns) { {'pk1' => 'text', 'ck1' => 'text', 'field1' => 'text'} }
