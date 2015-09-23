@@ -363,6 +363,20 @@ module Cassandra
             end
           end
 
+          context 'with a counter update' do
+            it 'should parse out the column operation' do
+              statement = Statement.new("UPDATE table SET other_field = other_field+1 WHERE pk1 = 'partitioner'", [])
+              expect(statement.args).to include(values: {'other_field' => Statement::Arithmetic.new(:plus, 'other_field', 1)})
+            end
+
+            context 'with a different operator' do
+              it 'should parse out the column operation' do
+                statement = Statement.new("UPDATE table SET other_field = other_field-5 WHERE pk1 = 'partitioner'", [])
+                expect(statement.args).to include(values: {'other_field' => Statement::Arithmetic.new(:minus, 'other_field', 5)})
+              end
+            end
+          end
+
           describe 'update filtering' do
             it 'should parse the restriction as a column filter' do
               statement = Statement.new("UPDATE everything SET field1 = 55 WHERE pk1 = 'books'", [])

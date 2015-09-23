@@ -175,10 +175,18 @@ module Cassandra
           if value_token.type == :in
             next_token
             filter_values << parenthesis_values(:rparen)
+            prev_token = next_token
           else
-            filter_values << value_token.normalized_value
+            value = value_token.normalized_value
+            prev_token = next_token
+            if prev_token.plus? || prev_token.minus?
+              column = value
+              value = next_token.normalized_value
+              value = Arithmetic.new(prev_token.type, column, value)
+              prev_token = next_token
+            end
+            filter_values << value
           end
-          prev_token = next_token
         end
 
         filter = insert_args(filter_keys, filter_values, args)
