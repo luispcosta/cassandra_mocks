@@ -83,6 +83,26 @@ module Cassandra
         end
       end
 
+      describe '#drop_table' do
+        let(:table_name) { 'table' }
+
+        before { subject.add_table(table_name, [['pk1'], 'ck1'], {'pk1' => 'text', 'ck1' => 'text'}) }
+
+        it 'should remove the table' do
+          subject.drop_table('table')
+          expect(subject.table('table')).to be_nil
+        end
+
+        context 'with a different table' do
+          let(:table_name) { 'products' }
+
+          it 'should remove the table' do
+            subject.drop_table('products')
+            expect(subject.table('products')).to be_nil
+          end
+        end
+      end
+
       private
 
       def create_columns(columns)

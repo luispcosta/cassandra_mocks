@@ -15,6 +15,10 @@ module Cassandra
         @tables[table_name] = Table.new(name, table_name, partition_key_columns, clustering_columns, fields)
       end
 
+      def drop_table(table_name)
+        @tables.delete(table_name)
+      end
+
       private
 
       def partition_key_part(columns, primary_key)
