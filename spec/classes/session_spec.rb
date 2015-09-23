@@ -294,6 +294,23 @@ module Cassandra
               expect(subject.execute_async(query).get).to eq(table.rows)
             end
           end
+
+          context 'when querying only specific rows' do
+            let(:query) { 'SELECT pk1 FROM books' }
+
+            it 'should return the results of querying for rows from the table containing only the specified columns' do
+              expect(subject.execute_async(query).get).to eq([{'pk1' => 'partition'}])
+            end
+
+            context 'with different columns' do
+              let(:query) { 'SELECT ck1, field1 FROM books' }
+
+              it 'should return the results of querying for rows from the table containing only the specified columns' do
+                expect(subject.execute_async(query).get).to eq([{'ck1' => 'clustering', 'field1' => 'extra data'}])
+              end
+            end
+          end
+
         end
       end
 
