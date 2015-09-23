@@ -35,11 +35,17 @@ module Cassandra
           statement.action = action
           statement.args = args.dup
           params = param_queue(params)
-          if args[:filter]
-            filter = args[:filter].inject({}) do |memo, (column, value)|
-              memo.merge!(column => (value || params.pop))
-            end
-            statement.args.merge!(filter: filter)
+          case action
+            when :insert
+              values = args[:values].inject({}) do |memo, (column, value)|
+                memo.merge!(column => (value || params.pop))
+              end
+              statement.args.merge!(values: values)
+            when :select, :delete
+              filter = args[:filter].inject({}) do |memo, (column, value)|
+                memo.merge!(column => (value || params.pop))
+              end
+              statement.args.merge!(filter: filter)
           end
         end
       end

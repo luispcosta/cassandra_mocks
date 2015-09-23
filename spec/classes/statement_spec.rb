@@ -301,6 +301,18 @@ module Cassandra
           end
         end
 
+        context 'with an INSERT query' do
+          let(:original_statement) do
+            Statement.new('INSERT INTO table (pk1, ck1) VALUES (?, ?)', [])
+          end
+          let(:args) { %w(Books abcdefg) }
+
+          it 'should duplicate the args, with the params filled in' do
+            expected_values = {'pk1' => 'Books', 'ck1' => 'abcdefg'}
+            expect(subject.args).to eq(original_statement.args.merge(values: expected_values))
+          end
+        end
+
         context 'with a query that does not require params' do
           let(:original_statement) do
             Statement.new('CREATE TABLE table(pk1 text, ck1 text, (pk1, ck1))', [])
