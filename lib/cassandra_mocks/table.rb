@@ -17,7 +17,7 @@ module Cassandra
 
       def select(*columns)
         filter = columns.pop if columns.last.is_a?(Hash)
-        if filter
+        if filter && !filter.empty?
           validate_partion_key_filter!(filter)
           validate_clustering_column_filter!(filter)
         end

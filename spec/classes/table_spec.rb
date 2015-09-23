@@ -202,6 +202,12 @@ module Cassandra
             end
           end
 
+          context 'when the filter is empty' do
+            it 'should treat it as having no filter' do
+              expect(subject.select('*', {})).to eq(subject.rows)
+            end
+          end
+
           describe 'filtering by partition key' do
             it 'should return all records for that partition' do
               expected_results = [{'pk1' => 'partition', 'pk2' => 'additional partition', 'ck1' => 'clustering', 'ck2' => 'additional clustering'}]
