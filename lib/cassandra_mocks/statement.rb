@@ -56,6 +56,8 @@ module Cassandra
 
       private
 
+      attr_reader :last_token
+
       def parameterize_args!(key, params, statement)
         values = args[key].inject({}) do |memo, (column, value)|
           memo.merge!(column => (value || params.pop))
@@ -71,7 +73,7 @@ module Cassandra
         if tokens.empty?
           Token.new(:eof, nil)
         else
-          tokens.pop
+          @last_token = tokens.pop
         end
       end
 
@@ -137,7 +139,8 @@ module Cassandra
 
         filter_keys = []
         filter_values = []
-        until tokens.empty?
+        prev_token = last_token
+        until tokens.empty? || prev_token.limit?
           filter_keys << next_token.value
           next_token
           value_token = next_token
@@ -147,11 +150,17 @@ module Cassandra
           else
             filter_values << value_token.normalized_value
           end
-          next_token unless tokens.empty?
+          prev_token = next_token
         end
+
         filter = insert_args(filter_keys, filter_values, args)
 
-        @args = {keyspace: keyspace_name, table: table_name, filter: filter}
+        if prev_token.limit?
+          limit = next_token.normalized_value
+          @args = {keyspace: keyspace_name, table: table_name, filter: filter, limit: limit}
+        else
+          @args = {keyspace: keyspace_name, table: table_name, filter: filter}
+        end
       end
 
       def parsed_keyspace_and_table

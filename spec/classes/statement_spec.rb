@@ -222,7 +222,7 @@ module Cassandra
         end
 
         context 'when the query is a SELECT query' do
-          it 'should be parsed as a delete' do
+          it 'should be parsed as a select' do
             statement = Statement.new('SELECT * FROM everything', [55])
             expect(statement.action).to eq(:select)
           end
@@ -241,6 +241,18 @@ module Cassandra
 
           it_behaves_like 'a query filtering a table', 'SELECT *'
           it_behaves_like 'a query with a restriction', 'SELECT *'
+
+          context 'with a LIMIT provided' do
+            it 'should parse the restriction as a column filter with the specified limit' do
+              statement = Statement.new("SELECT * FROM everything WHERE pk1 = 'books' LIMIT 5", [])
+              expect(statement.args).to include(limit: 5)
+            end
+
+            it 'should parse specified limit' do
+              statement = Statement.new('SELECT * FROM everything LIMIT 3', [])
+              expect(statement.args).to include(limit: 3)
+            end
+          end
         end
 
         context 'when the query is a DELETE query' do
