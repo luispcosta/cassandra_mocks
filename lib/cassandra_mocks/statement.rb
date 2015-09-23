@@ -30,9 +30,7 @@ module Cassandra
         elsif type_token.insert?
           parse_insert_query(args)
         elsif type_token.update?
-          keyspace_name, table_name = parsed_keyspace_and_table
-          filter, _ = parsed_filter(args, :where)
-          @args = {keyspace: keyspace_name, table: table_name, values: filter}
+          parse_update_query(args)
         elsif type_token.select?
           parse_select_query(args)
         elsif type_token.delete?
@@ -138,6 +136,13 @@ module Cassandra
 
         values = insert_args(insert_keys, insert_values, args)
         @args = {keyspace: keyspace_name, table: table_name, values: values}
+      end
+
+      def parse_update_query(args)
+        keyspace_name, table_name = parsed_keyspace_and_table
+        values, _ = parsed_filter(args, :where)
+        filter, _ = parsed_filter(args, :eof)
+        @args = {keyspace: keyspace_name, table: table_name, values: values, filter: filter}
       end
 
       def parse_select_query(args)

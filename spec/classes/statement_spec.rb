@@ -363,6 +363,17 @@ module Cassandra
             end
           end
 
+          describe 'update filtering' do
+            it 'should parse the restriction as a column filter' do
+              statement = Statement.new("UPDATE everything SET field1 = 55 WHERE pk1 = 'books'", [])
+              expect(statement.args).to include(filter: {'pk1' => 'books'})
+            end
+
+            it 'should support multiple restrictions' do
+              statement = Statement.new("UPDATE everything SET field1 = 55 WHERE pk1 = 'cds' and ck1 = 'Rock'", [])
+              expect(statement.args).to include(filter: {'pk1' => 'cds', 'ck1' => 'Rock'})
+            end
+          end
         end
 
         describe 'queries to be filled in later' do
