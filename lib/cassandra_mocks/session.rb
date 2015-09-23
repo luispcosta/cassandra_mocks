@@ -16,8 +16,9 @@ module Cassandra
         prepare_async(cql).get
       end
 
-      def execute_async(cql)
-        prepare_async(cql).then do |statement|
+      def execute_async(cql, *args)
+        future = cql.is_a?(Statement) ? Cassandra::Future.value(cql.fill_params(args)) : prepare_async(cql)
+        future.then do |statement|
           case statement.action
             when :create_keyspace
               @cluster.add_keyspace(statement.args[:keyspace])

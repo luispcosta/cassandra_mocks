@@ -331,6 +331,27 @@ module Cassandra
                 expect(subject.execute_async(query).get).to eq([expected_row])
               end
             end
+
+            context 'with a parameterized query' do
+              let(:query) { 'SELECT * FROM books WHERE pk1 = ? AND ck1 = ?' }
+              let(:statement) { subject.prepare(query) }
+
+              it 'should run the pre-parsed query with the filled in parameters' do
+                results = subject.execute_async(statement, 'other partition', 'clustering').get
+                expected_row = {'pk1' => 'other partition', 'ck1' => 'clustering', 'field1' => 'extra data'}
+                expect(results).to eq([expected_row])
+              end
+            end
+          end
+        end
+
+        context 'when the query is a statement' do
+          let(:query) { "CREATE KEYSPACE keyspace_name WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 }" }
+          let(:statement) { subject.prepare(query) }
+
+          it 'should run the pre-parsed query' do
+            subject.execute_async(statement).get
+            expect(cluster.keyspace('keyspace_name')).to eq(Keyspace.new('keyspace_name'))
           end
         end
       end
