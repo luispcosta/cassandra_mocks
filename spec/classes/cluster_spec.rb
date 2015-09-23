@@ -3,9 +3,9 @@ require 'rspec'
 module Cassandra
   module Mocks
     describe Cluster do
+      let(:cluster) { Cluster.new }
 
       describe '#connect_async' do
-        let(:cluster) { Cluster.new }
         let(:keyspace) { nil }
         subject { cluster.connect_async(keyspace) }
 
@@ -56,6 +56,20 @@ module Cassandra
             expect(subject).to eq(Session.new(keyspace, cluster))
           end
         end
+      end
+
+      describe '#close_async' do
+        subject { cluster.close_async }
+
+        it { is_expected.to be_a_kind_of(Cassandra::Future) }
+
+        its(:get) { is_expected.to be_nil }
+      end
+
+      describe '#close' do
+        subject { cluster.close }
+
+        it { is_expected.to be_nil }
       end
 
       describe '#add_keyspace' do

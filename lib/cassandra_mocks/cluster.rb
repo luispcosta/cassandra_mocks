@@ -14,6 +14,14 @@ module Cassandra
         Cassandra::Future.value(session)
       end
 
+      def close_async
+        Cassandra::Future.value(nil)
+      end
+
+      def close
+        close_async.get
+      end
+
       def connect(keyspace = nil)
         connect_async(keyspace).get
       end
