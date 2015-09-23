@@ -97,6 +97,10 @@ module Cassandra
           expect(subject.select('*')).to eq([attributes])
         end
 
+        it 'should result a ResultPage' do
+          expect(subject.select('*')).to be_a_kind_of(ResultPage)
+        end
+
         context 'with multiple rows' do
           let(:attributes) { {'pk1' => 'other partition', 'ck1' => 'clustering'} }
           let(:other_attributes) { {'pk1' => 'other partition', 'ck1' => 'other clustering'} }

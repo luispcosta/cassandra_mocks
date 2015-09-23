@@ -27,9 +27,10 @@ module Cassandra
           compare_rows(0, lhs, rhs)
         end
 
-        sorted_rows.map do |row|
+        result_rows = sorted_rows.map do |row|
           (columns.first == '*') ? row : row.slice(*columns)
         end
+        ResultPage.new(result_rows)
       end
 
       def delete(filter)
