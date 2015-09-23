@@ -177,12 +177,11 @@ module Cassandra
             filter_values << parenthesis_values(:rparen)
             prev_token = next_token
           else
-            value = value_token.normalized_value
             prev_token = next_token
-            if prev_token.plus? || prev_token.minus?
-              column = value
-              value = next_token.normalized_value
-              value = Arithmetic.new(prev_token.type, column, value)
+            value = value_token.normalized_value
+            update_value = update_value(prev_token, value)
+            if update_value
+              value = update_value
               prev_token = next_token
             end
             filter_values << value
@@ -191,6 +190,14 @@ module Cassandra
 
         filter = insert_args(filter_keys, filter_values, args)
         [filter, prev_token]
+      end
+
+      def update_value(prev_token, value)
+        if prev_token.plus? || prev_token.minus?
+          column = value
+          amount = next_token.normalized_value
+          Arithmetic.new(prev_token.type, column, amount)
+        end
       end
 
       def parsed_keyspace_and_table
