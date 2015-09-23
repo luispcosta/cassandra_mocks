@@ -33,11 +33,14 @@ module Cassandra
         Statement.allocate.tap do |statement|
           statement.cql = cql
           statement.action = action
+          statement.args = args.dup
           params = param_queue(params)
-          filter = args[:filter].inject({}) do |memo, (column, value)|
-            memo.merge!(column => (value || params.pop))
+          if args[:filter]
+            filter = args[:filter].inject({}) do |memo, (column, value)|
+              memo.merge!(column => (value || params.pop))
+            end
+            statement.args.merge!(filter: filter)
           end
-          statement.args = args.merge(filter: filter)
         end
       end
 

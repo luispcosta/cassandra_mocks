@@ -300,6 +300,17 @@ module Cassandra
             expect(subject.args).to eq(original_statement.args.merge(filter: expected_filter))
           end
         end
+
+        context 'with a query that does not require params' do
+          let(:original_statement) do
+            Statement.new('CREATE TABLE table(pk1 text, ck1 text, (pk1, ck1))', [])
+          end
+          let(:args) { [] }
+
+          it 'should leave the args alone' do
+            expect(subject.args).to eq(original_statement.args)
+          end
+        end
       end
 
     end
