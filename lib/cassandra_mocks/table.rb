@@ -17,6 +17,7 @@ module Cassandra
 
       def select(*columns)
         filter = columns.pop if columns.last.is_a?(Hash)
+        limit = (filter.delete(:limit) if filter)
         if filter && !filter.empty?
           validate_partion_key_filter!(filter)
           validate_clustering_column_filter!(filter)
@@ -26,6 +27,8 @@ module Cassandra
         sorted_rows = filtered_rows.sort do |lhs, rhs|
           compare_rows(0, lhs, rhs)
         end
+
+        sorted_rows = sorted_rows[0...limit] if limit
 
         result_rows = sorted_rows.map do |row|
           (columns.first == '*') ? row : row.slice(*columns)

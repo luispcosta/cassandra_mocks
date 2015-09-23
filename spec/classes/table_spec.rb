@@ -103,12 +103,28 @@ module Cassandra
 
         context 'with multiple rows' do
           let(:attributes) { {'pk1' => 'other partition', 'ck1' => 'clustering'} }
-          let(:other_attributes) { {'pk1' => 'other partition', 'ck1' => 'other clustering'} }
+          let(:attributes_two) { {'pk1' => 'other partition', 'ck1' => 'other clustering'} }
+          let(:attributes_three) { {'pk1' => 'other partition', 'ck1' => 'other clustering2'} }
 
-          before { subject.insert(other_attributes) }
+          before do
+            subject.insert(attributes_two)
+            subject.insert(attributes_three)
+          end
 
           it 'should return all of the inserted rows' do
-            expect(subject.select('*')).to match_array([attributes, other_attributes])
+            expect(subject.select('*')).to match_array([attributes, attributes_two, attributes_three])
+          end
+
+          context 'with a limit specified' do
+            it 'should limit the returned results to the specified number of rows' do
+              expect(subject.select('*', limit: 1)).to match_array([attributes])
+            end
+
+            context 'with a different limit' do
+              it 'should limit the returned results to the specified number of rows' do
+                expect(subject.select('*', limit: 2)).to match_array([attributes, attributes_two])
+              end
+            end
           end
         end
 
