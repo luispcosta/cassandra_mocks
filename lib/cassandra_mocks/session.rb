@@ -30,11 +30,7 @@ module Cassandra
               @cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).rows.clear
             when :select
               table = @cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table])
-              if statement.args[:filter].empty?
-                table.select(*statement.args[:columns])
-              else
-                table.select(*statement.args[:columns], statement.args[:filter])
-              end
+              table.select(*statement.args[:columns], statement.args[:filter].merge(limit: statement.args[:limit]))
           end
         end
       end

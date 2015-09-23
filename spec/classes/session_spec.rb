@@ -311,7 +311,7 @@ module Cassandra
             end
           end
 
-          context 'with a filter' do
+          context 'with a filter or limit' do
             let(:rows) do
               [{'pk1' => 'other partition', 'ck1' => 'clustering', 'field1' => 'extra data'},
                {'pk1' => 'other partition', 'ck1' => 'other clustering', 'field1' => 'dreams field'}]
@@ -321,6 +321,15 @@ module Cassandra
             it 'should filter the query results by the provided restriction' do
               expected_row = {'pk1' => 'other partition', 'ck1' => 'clustering', 'field1' => 'extra data'}
               expect(subject.execute_async(query).get).to eq([expected_row])
+            end
+
+            describe 'handling limits' do
+              let(:query) { 'SELECT * FROM books limit 1' }
+
+              it 'should filter the query results by the provided restriction' do
+                expected_row = {'pk1' => 'other partition', 'ck1' => 'clustering', 'field1' => 'extra data'}
+                expect(subject.execute_async(query).get).to eq([expected_row])
+              end
             end
 
             context 'with a different filter' do
