@@ -19,6 +19,14 @@ module Cassandra
           end
         elsif type_token.truncate?
           parse_truncate_query
+        elsif type_token.drop?
+          if next_token.keyspace?
+            @action = :drop_keyspace
+            @args = { keyspace: next_token.value }
+          else
+            @action = :drop_table
+            parse_truncate_query
+          end
         elsif type_token.insert?
           parse_insert_query(args)
         elsif type_token.select?
