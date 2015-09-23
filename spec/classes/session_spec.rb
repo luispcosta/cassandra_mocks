@@ -266,6 +266,46 @@ module Cassandra
           end
         end
 
+        context 'with a DROP table query' do
+          let(:keyspace) { 'keys' }
+          let(:table_keyspace) { keyspace }
+          let(:table_name) { 'table' }
+          let!(:table) do
+            cluster.add_keyspace(keyspace)
+            cluster.add_keyspace(table_keyspace)
+            cluster.keyspace(table_keyspace).tap do |ks|
+              ks.add_table(table_name, [['pk1'], 'ck1'], {'pk1' => 'text', 'ck1' => 'text'})
+            end.table(table_name)
+          end
+          let(:query) { "DROP TABLE #{table_name}" }
+          let(:keyspace_with_table) { cluster.keyspace(table_keyspace) }
+
+          it 'should delete the table' do
+            subject.execute_async(query).get
+            expect(keyspace_with_table.table(table_name)).to be_nil
+          end
+
+          context 'with a different keyspace' do
+            let(:table_name) { 'prices' }
+
+            it 'should delete the table' do
+              subject.execute_async(query).get
+              expect(keyspace_with_table.table(table_name)).to be_nil
+            end
+          end
+
+          context 'with a namespaced table' do
+            let(:table_keyspace) { 'counters' }
+            let(:query) { "DROP TABLE #{table_keyspace}.#{table_name}" }
+            let(:table_name) { 'prices' }
+
+            it 'should delete the table' do
+              subject.execute_async(query).get
+              expect(keyspace_with_table.table(table_name)).to be_nil
+            end
+          end
+        end
+
         context 'with a SELECT query' do
           let(:query) { "SELECT * FROM #{table_name}" }
           let(:primary_key) { [['pk1'], 'ck1'] }
