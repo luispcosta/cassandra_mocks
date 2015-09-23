@@ -8,6 +8,14 @@ module Cassandra
         @cluster = cluster
       end
 
+      def close_async
+        Cassandra::Future.value(nil)
+      end
+
+      def close
+        close_async.get
+      end
+
       def prepare_async(cql)
         Cassandra::Future.value(Statement.new(cql, []))
       end

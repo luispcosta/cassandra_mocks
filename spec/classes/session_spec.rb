@@ -5,10 +5,25 @@ module Cassandra
     describe Session do
       let(:keyspace) { nil }
       let(:cluster) { Cluster.new }
+      let(:session) { Session.new(keyspace, cluster) }
 
-      subject { Session.new(keyspace, cluster) }
+      subject { session }
 
       its(:cluster) { is_expected.to eq(cluster) }
+
+      describe '#close_async' do
+        subject { session.close_async }
+
+        it { is_expected.to be_a_kind_of(Cassandra::Future) }
+
+        its(:get) { is_expected.to be_nil }
+      end
+
+      describe '#close' do
+        subject { session.close }
+
+        it { is_expected.to be_nil }
+      end
 
       describe '#keyspace' do
         its(:keyspace) { is_expected.to be_nil }
