@@ -41,6 +41,7 @@ module Cassandra
             it_behaves_like 'a token from a reserved keyword', 'DELETE', :delete
             it_behaves_like 'a token from a reserved keyword', 'FROM', :from
             it_behaves_like 'a token from a reserved keyword', 'WHERE', :where
+            it_behaves_like 'a token from a reserved keyword', 'LIMIT', :limit
             it_behaves_like 'a token from a reserved keyword', 'AND', :and
             it_behaves_like 'a token from a reserved keyword', 'IN', :in
             it_behaves_like 'a token from a reserved keyword', 'NOT', :not
