@@ -188,12 +188,13 @@ module Cassandra
           let(:column_count) { columns.count }
           let(:column_names) { columns.keys }
           let(:column_values) { columns.keys.map { SecureRandom.uuid } }
+          let(:quoted_column_values) { column_values.map { |value| "'#{value}'" } }
           let(:expected_row) do
             column_count.times.inject({}) do |memo, index|
               memo.merge!(column_names[index] => column_values[index])
             end
           end
-          let(:query) { "INSERT INTO #{table_name} (#{column_names*','}) VALUES (#{column_values*','})" }
+          let(:query) { "INSERT INTO #{table_name} (#{column_names*','}) VALUES (#{quoted_column_values*','})" }
 
           it 'should add a row into the specified table' do
             subject.execute_async(query).get
@@ -211,7 +212,7 @@ module Cassandra
 
           context 'with a namespaced table' do
             let(:table_keyspace) { 'counters' }
-            let(:query) { "INSERT INTO #{table_keyspace}.#{table_name} (#{column_names*','}) VALUES (#{column_values*','})" }
+            let(:query) { "INSERT INTO #{table_keyspace}.#{table_name} (#{column_names*','}) VALUES (#{quoted_column_values*','})" }
 
             it 'should add a row into the specified table' do
               subject.execute_async(query).get

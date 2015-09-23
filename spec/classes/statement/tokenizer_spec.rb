@@ -37,6 +37,7 @@ module Cassandra
             it_behaves_like 'a token from a reserved keyword', 'TABLE', :table
             it_behaves_like 'a token from a reserved keyword', 'KEYSPACE', :keyspace
             it_behaves_like 'a token from a reserved keyword', 'INSERT', :insert
+            it_behaves_like 'a token from a reserved keyword', 'UPDATE', :update
             it_behaves_like 'a token from a reserved keyword', 'VALUES', :values
             it_behaves_like 'a token from a reserved keyword', 'SELECT', :select
             it_behaves_like 'a token from a reserved keyword', 'DELETE', :delete
@@ -55,6 +56,8 @@ module Cassandra
             it_behaves_like 'a token from a reserved keyword', '[', :lbracket
             it_behaves_like 'a token from a reserved keyword', ']', :rbracket
             it_behaves_like 'a token from a reserved keyword', '=', :eql
+            it_behaves_like 'a token from a reserved keyword', '+', :plus
+            it_behaves_like 'a token from a reserved keyword', '-', :minus
             it_behaves_like 'a token from a reserved keyword', '*', :star
             it_behaves_like 'a token from a reserved keyword', '?', :parameter
 
@@ -142,7 +145,7 @@ module Cassandra
           end
 
           describe 'tokenizing statements lacking spaces' do
-            let(:statement) { 'SELECT * FROM everything WHERE something=? AND nothing IN (1,2)' }
+            let(:statement) { 'SELECT * FROM everything WHERE something=? AND nothing IN (1+3,2-1)' }
 
             it 'should split the statement into tokens' do
               expected_tokens = [
@@ -159,8 +162,12 @@ module Cassandra
                   {in: 'IN'},
                   {lparen: '('},
                   {int: '1'},
+                  {plus: '+'},
+                  {int: '3'},
                   {comma: ','},
                   {int: '2'},
+                  {minus: '-'},
+                  {int: '1'},
                   {rparen: ')'},
               ]
               expect(subject.tokens).to eq(tokenize_expected expected_tokens)
