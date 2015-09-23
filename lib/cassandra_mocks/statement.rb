@@ -37,15 +37,9 @@ module Cassandra
           params = param_queue(params)
           case action
             when :insert
-              values = args[:values].inject({}) do |memo, (column, value)|
-                memo.merge!(column => (value || params.pop))
-              end
-              statement.args.merge!(values: values)
+              parameterize_args!(:values, params, statement)
             when :select, :delete
-              filter = args[:filter].inject({}) do |memo, (column, value)|
-                memo.merge!(column => (value || params.pop))
-              end
-              statement.args.merge!(filter: filter)
+              parameterize_args!(:filter, params, statement)
           end
         end
       end
@@ -61,6 +55,13 @@ module Cassandra
       attr_writer :cql, :action, :args
 
       private
+
+      def parameterize_args!(key, params, statement)
+        values = args[key].inject({}) do |memo, (column, value)|
+          memo.merge!(column => (value || params.pop))
+        end
+        statement.args.merge!(key => values)
+      end
 
       def tokens
         @tokens ||= Tokenizer.new(@cql).token_queue
