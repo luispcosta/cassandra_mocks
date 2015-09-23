@@ -319,14 +319,15 @@ module Cassandra
           it_behaves_like 'a query with a restriction', 'DELETE'
         end
 
-        context 'when arguments are specified at a later time' do
-          subject { Statement.new('DELETE FROM everything WHERE something = ?', []) }
+        describe 'queries to be filled in later' do
+          context 'when arguments are specified at a later time' do
+            subject { Statement.new('DELETE FROM everything WHERE something = ?', []) }
 
-          it 'should nullify the cql params' do
-            expect(subject.args).to include(filter: {'something' => nil})
+            it 'should nullify the cql params' do
+              expect(subject.args).to include(filter: {'something' => nil})
+            end
           end
         end
-
       end
 
       describe '#fill_params' do
