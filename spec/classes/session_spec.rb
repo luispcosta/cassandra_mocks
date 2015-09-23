@@ -242,6 +242,59 @@ module Cassandra
             end
           end
         end
+
+        describe 'with a SELECT query' do
+          let(:query) { "SELECT * FROM #{table_name}" }
+          let(:primary_key) { [['pk1'], 'ck1'] }
+          let(:columns) { {'pk1' => 'text', 'ck1' => 'text', 'field1' => 'text'} }
+          let(:keyspace) { 'development' }
+          let(:table_keyspace) { keyspace }
+          let(:table_name) { 'books' }
+          let!(:table) do
+            cluster.add_keyspace(keyspace)
+            cluster.add_keyspace(table_keyspace)
+            cluster.keyspace(table_keyspace).tap do |ks|
+              ks.add_table(table_name, primary_key, columns)
+            end.table(table_name)
+          end
+          let(:rows) do
+            [{'pk1' => 'partition', 'ck1' => 'clustering', 'field1' => 'extra data'}]
+          end
+
+          before { rows.each { |row| table.insert(row) } }
+
+          it 'should return the results of querying for rows from the table' do
+            expect(subject.execute_async(query).get).to eq(table.rows)
+          end
+
+          context 'with different data in the table' do
+            let(:rows) do
+              [{'pk1' => 'other partition', 'ck1' => 'clustering', 'field1' => 'extra data'},
+               {'pk1' => 'other partition', 'ck1' => 'other clustering', 'field1' => 'dreams field'}]
+            end
+
+            it 'should return the results of querying for rows from the table' do
+              expect(subject.execute_async(query).get).to eq(table.rows)
+            end
+          end
+
+          context 'with a different table' do
+            let(:table_name) { 'food' }
+
+            it 'should return the results of querying for rows from the table' do
+              expect(subject.execute_async(query).get).to eq(table.rows)
+            end
+          end
+
+          context 'with a namespaced table' do
+            let(:table_keyspace) { 'counters' }
+            let(:query) { "SELECT * FROM #{table_keyspace}.#{table_name}" }
+
+            it 'should return the results of querying for rows from the table within the specified keyspace' do
+              expect(subject.execute_async(query).get).to eq(table.rows)
+            end
+          end
+        end
       end
 
       describe '#execute' do
