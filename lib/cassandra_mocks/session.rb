@@ -70,6 +70,7 @@ module Cassandra
       def update_query(statement)
         table = cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table])
         rows_to_update = table.select('*', statement.args[:filter])
+        rows_to_update = [statement.args[:filter].dup] if rows_to_update.empty?
         rows_to_update.each do |row|
           updated_row = updated_row(row, statement)
           cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).insert(updated_row)

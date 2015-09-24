@@ -461,6 +461,16 @@ module Cassandra
             expect(table.select('*')).to eq([expected_row])
           end
 
+          context 'when the row does not already exist' do
+            let(:query) { "UPDATE #{table_name} SET field1 = 7 WHERE pk1 = 'books' AND ck1 = 'romance'" }
+
+            it 'should update the row with the specified values' do
+              subject.execute_async(query).get
+              expected_row = row.merge('ck1' => 'romance', 'field1' => 7)
+              expect(table.select('*', 'pk1' => 'books', 'ck1' => 'romance')).to eq([expected_row])
+            end
+          end
+
           context 'with a different table' do
             let(:table_name) { 'book_counts' }
 
