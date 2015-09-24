@@ -498,6 +498,18 @@ module Cassandra
               expect(table.select('*')).to eq([expected_row])
             end
           end
+
+          context 'with different fields' do
+            let(:columns) { {'pk1' => 'text', 'ck1' => 'text', 'book_count' => 'counter'} }
+            let(:row) { {'pk1' => 'books', 'ck1' => 'mystery', 'book_count' => 51234} }
+            let(:query) { "UPDATE #{table_name} SET book_count = 70101 WHERE pk1 = 'books' AND ck1 = 'mystery'" }
+
+            it 'should update the row with the specified values' do
+              subject.execute_async(query).get
+              expected_row = row.merge('book_count' => 70101)
+              expect(table.select('*')).to eq([expected_row])
+            end
+          end
         end
 
         context 'when the query is a statement' do
