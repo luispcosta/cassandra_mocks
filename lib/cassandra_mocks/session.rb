@@ -34,9 +34,7 @@ module Cassandra
             when :create_table
               cluster.keyspace(keyspace).add_table(statement.args[:table], statement.args[:primary_key], statement.args[:columns])
             when :insert
-              check_exists = !!statement.args[:check_exists]
-              inserted = cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).insert(statement.args[:values], check_exists: check_exists)
-              result.merge!('[applied]' => inserted) if check_exists
+              insert_query(result, statement)
             when :update
               update_query(statement)
             when :truncate
@@ -63,6 +61,12 @@ module Cassandra
       end
 
       private
+
+      def insert_query(result, statement)
+        check_exists = !!statement.args[:check_exists]
+        inserted = cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).insert(statement.args[:values], check_exists: check_exists)
+        result.merge!('[applied]' => inserted) if check_exists
+      end
 
       def select_query(statement)
         table = cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table])
