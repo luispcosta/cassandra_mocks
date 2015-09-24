@@ -510,6 +510,20 @@ module Cassandra
               expect(table.select('*')).to eq([expected_row])
             end
           end
+
+          context 'with multiple rows to update' do
+            let(:row_two) { {'pk1' => 'books', 'ck1' => 'romance', 'field1' => 17} }
+            let(:query) { "UPDATE #{table_name} SET field1 = 21 WHERE pk1 = 'books'" }
+
+            before { table.insert(row_two) }
+
+            it 'should update both rows' do
+              subject.execute_async(query).get
+              expected_row = row.merge('field1' => 21)
+              expected_row_two = row_two.merge('field1' => 21)
+              expect(table.select('*')).to eq([expected_row, expected_row_two])
+            end
+          end
         end
 
         context 'when the query is a statement' do

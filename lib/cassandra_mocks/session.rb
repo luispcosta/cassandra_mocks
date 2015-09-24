@@ -36,8 +36,11 @@ module Cassandra
               cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).insert(statement.args[:values])
             when :update
               table = cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table])
-              row = table.select('*', statement.args[:filter]).first.merge(statement.args[:values])
-              cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).insert(row)
+              rows_to_update = table.select('*', statement.args[:filter])
+              rows_to_update.each do |row|
+                updated_row = row.merge(statement.args[:values])
+                cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).insert(updated_row)
+              end
             when :truncate
               cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).rows.clear
             when :drop_keyspace
