@@ -349,6 +349,11 @@ module Cassandra
                 expect(statement.args).to include(keyspace: 'counters', table: 'product_counts')
               end
             end
+
+            it 'should parse out the columns to update with the specified values' do
+              statement = Statement.new('UPDATE keys.products SET field1 = 55 WHERE pk1 = 19', [])
+              expect(statement.args).to include(values: {'field1' => 55})
+            end
           end
 
           it 'should parse out the columns to update with the specified values' do

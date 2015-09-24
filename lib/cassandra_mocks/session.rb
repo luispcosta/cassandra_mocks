@@ -36,7 +36,7 @@ module Cassandra
               cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).insert(statement.args[:values])
             when :update
               table = cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table])
-              row = table.select('*', statement.args[:filter]).first.merge('field1' => 7)
+              row = table.select('*', statement.args[:filter]).first.merge('field1' => statement.args[:values]['field1'])
               cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).insert(row)
             when :truncate
               cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).rows.clear

@@ -140,6 +140,7 @@ module Cassandra
 
       def parse_update_query(args)
         keyspace_name, table_name = parsed_keyspace_and_table
+        next_token if keyspace_name
         values, _ = parsed_filter(args, :where)
         filter, _ = parsed_filter(args, :eof)
         @args = {keyspace: keyspace_name, table: table_name, values: values, filter: filter}
