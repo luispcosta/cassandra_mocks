@@ -65,6 +65,14 @@ module Cassandra
             expect(subject.rows).to eq([other_attributes])
           end
 
+          context 'when requested to reject new entries' do
+            it 'should only keep the oldest copy of the record' do
+              subject.insert(attributes, check_exists: true)
+              subject.insert(other_attributes, check_exists: true)
+              expect(subject.rows).to eq([attributes])
+            end
+          end
+
           context 'with a different set of rows' do
             let(:attributes) { {'pk1' => 10, 'ck1' => 'hello', 'field1' => 'world'} }
             let(:attributes_two) { {'pk1' => 10, 'ck1' => 'goodbye', 'field1' => 'planet'} }

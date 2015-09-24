@@ -8,7 +8,7 @@ module Cassandra
         super(keyspace, name, partition_key, clustering_key, column_map, options, [])
       end
 
-      def insert(attributes)
+      def insert(attributes, options = {})
         validate_columns!(attributes)
         validate_primary_key_presence!(attributes)
 
@@ -17,6 +17,7 @@ module Cassandra
         end
 
         if prev_row_index
+          return if options[:check_exists]
           rows[prev_row_index] = attributes
         else
           rows << attributes
