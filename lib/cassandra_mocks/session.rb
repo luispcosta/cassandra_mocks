@@ -35,18 +35,7 @@ module Cassandra
             when :insert
               cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).insert(statement.args[:values])
             when :update
-              table = cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table])
-              rows_to_update = table.select('*', statement.args[:filter])
-              rows_to_update.each do |row|
-                updated_row = statement.args[:values].inject(row.dup) do |memo, (column, value)|
-                  if value.is_a?(Statement::Arithmetic)
-                    value.apply(memo)
-                  else
-                    memo.merge!(column => value)
-                  end
-                end
-                cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).insert(updated_row)
-              end
+              update_query(statement)
             when :truncate
               cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).rows.clear
             when :drop_keyspace
@@ -54,8 +43,7 @@ module Cassandra
             when :drop_table
               cluster.keyspace(statement.args[:keyspace] || keyspace).drop_table(statement.args[:table])
             when :select
-              table = cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table])
-              table.select(*statement.args[:columns], statement.args[:filter].merge(limit: statement.args[:limit]))
+              select_query(statement)
           end
         end
       end
@@ -68,6 +56,32 @@ module Cassandra
         rhs.is_a?(Session) &&
             rhs.keyspace == keyspace &&
             rhs.cluster == cluster
+      end
+
+      private
+
+      def select_query(statement)
+        table = cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table])
+        table.select(*statement.args[:columns], statement.args[:filter].merge(limit: statement.args[:limit]))
+      end
+
+      def update_query(statement)
+        table = cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table])
+        rows_to_update = table.select('*', statement.args[:filter])
+        rows_to_update.each do |row|
+          updated_row = updated_row(row, statement)
+          cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).insert(updated_row)
+        end
+      end
+
+      def updated_row(row, statement)
+        statement.args[:values].inject(row.dup) do |memo, (column, value)|
+          if value.is_a?(Statement::Arithmetic)
+            value.apply(memo)
+          else
+            memo.merge!(column => value)
+          end
+        end
       end
 
     end
