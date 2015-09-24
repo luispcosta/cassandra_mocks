@@ -433,6 +433,63 @@ module Cassandra
           end
         end
 
+        context 'with an UPDATE query' do
+          let(:primary_key) { [['pk1'], 'ck1'] }
+          let(:columns) { {'pk1' => 'text', 'ck1' => 'text', 'field1' => 'counter'} }
+          let(:keyspace) { 'development' }
+          let(:table_keyspace) { keyspace }
+          let(:table_name) { 'books' }
+          let!(:table) do
+            cluster.add_keyspace(keyspace)
+            cluster.add_keyspace(table_keyspace)
+            cluster.keyspace(table_keyspace).tap do |ks|
+              ks.add_table(table_name, primary_key, columns)
+            end.table(table_name)
+          end
+          let(:row) { {'pk1' => 'books', 'ck1' => 'mystery', 'field1' => 5} }
+          let(:query) { "UPDATE #{table_name} SET field1 = 7 WHERE pk1 = 'books' AND ck1 = 'mystery'" }
+
+          before { table.insert(row) }
+
+          it 'should update the row with the specified values' do
+            subject.execute_async(query).get
+            expected_row = row.merge('field1' => 7)
+            expect(table.select('*')).to eq([expected_row])
+          end
+
+          context 'with a different table' do
+            let(:table_name) { 'book_counts' }
+
+            it 'should update the row with the specified values' do
+              subject.execute_async(query).get
+              expected_row = row.merge('field1' => 7)
+              expect(table.select('*')).to eq([expected_row])
+            end
+          end
+
+          context 'with a namespaced table' do
+            let(:table_keyspace) { 'production_counters' }
+            let(:query) { "UPDATE #{table_keyspace}.#{table_name} SET field1 = 7 WHERE pk1 = 'books' AND ck1 = 'mystery'" }
+
+            it 'should update the row with the specified values' do
+              subject.execute_async(query).get
+              expected_row = row.merge('field1' => 7)
+              expect(table.select('*')).to eq([expected_row])
+            end
+          end
+
+          context 'with a different filter' do
+            let(:query) { "UPDATE #{table_name} SET field1 = 7 WHERE pk1 = 'movies' AND ck1 = 'action'" }
+            let(:row) { {'pk1' => 'movies', 'ck1' => 'action', 'field1' => 5} }
+
+            it 'should update the row with the specified values' do
+              subject.execute_async(query).get
+              expected_row = row.merge('field1' => 7)
+              expect(table.select('*')).to eq([expected_row])
+            end
+          end
+        end
+
         context 'when the query is a statement' do
           let(:query) { "CREATE KEYSPACE keyspace_name WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 }" }
           let(:statement) { subject.prepare(query) }
