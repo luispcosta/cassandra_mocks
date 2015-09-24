@@ -38,6 +38,7 @@ module Cassandra
             it_behaves_like 'a token from a reserved keyword', 'KEYSPACE', :keyspace
             it_behaves_like 'a token from a reserved keyword', 'INSERT', :insert
             it_behaves_like 'a token from a reserved keyword', 'UPDATE', :update
+            it_behaves_like 'a token from a reserved keyword', 'SET', :set
             it_behaves_like 'a token from a reserved keyword', 'VALUES', :values
             it_behaves_like 'a token from a reserved keyword', 'SELECT', :select
             it_behaves_like 'a token from a reserved keyword', 'DELETE', :delete
@@ -46,7 +47,9 @@ module Cassandra
             it_behaves_like 'a token from a reserved keyword', 'LIMIT', :limit
             it_behaves_like 'a token from a reserved keyword', 'AND', :and
             it_behaves_like 'a token from a reserved keyword', 'IN', :in
+            it_behaves_like 'a token from a reserved keyword', 'IF', :if
             it_behaves_like 'a token from a reserved keyword', 'NOT', :not
+            it_behaves_like 'a token from a reserved keyword', 'EXISTS', :exists
             it_behaves_like 'a token from a reserved keyword', '(', :lparen
             it_behaves_like 'a token from a reserved keyword', ')', :rparen
             it_behaves_like 'a token from a reserved keyword', '<', :ltri
