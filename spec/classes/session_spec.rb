@@ -205,15 +205,30 @@ module Cassandra
             expect(table.rows).to eq([expected_row])
           end
 
-          context 'when the record already exists and checking if the record already exists' do
-            let(:old_row) { expected_row.merge('description' => 'introduction to duplicate records') }
+          it 'should resolve to an empty hash' do
+            expect(subject.execute_async(query).get).to eq({})
+          end
+
+          context 'when checking if the record already exists' do
             let(:query) { "INSERT INTO #{table_name} (#{column_names*','}) VALUES (#{quoted_column_values*','}) IF NOT EXISTS" }
 
-            before { table.insert(old_row) }
+            it 'should resolve to a hash indicating that the record was inserted successfully' do
+              expect(subject.execute_async(query).get).to eq({'[applied]' => true})
+            end
 
-            it 'should add a row into the specified table' do
-              subject.execute_async(query).get
-              expect(table.rows).to eq([old_row])
+            context 'when the row has already been inserted' do
+              let(:old_row) { expected_row.merge('description' => 'introduction to duplicate records') }
+
+              before { table.insert(old_row) }
+
+              it 'should add a row into the specified table' do
+                subject.execute_async(query).get
+                expect(table.rows).to eq([old_row])
+              end
+
+              it 'should resolve to a hash indicating a failure to insert the record' do
+                expect(subject.execute_async(query).get).to eq({'[applied]' => false})
+              end
             end
           end
 
