@@ -135,7 +135,11 @@ module Cassandra
         insert_values = parenthesis_values(:rparen)
 
         values = insert_args(insert_keys, insert_values, args)
-        @args = {keyspace: keyspace_name, table: table_name, values: values}
+        if next_token.if?
+          @args = {keyspace: keyspace_name, table: table_name, values: values, check_exists: true}
+        else
+          @args = {keyspace: keyspace_name, table: table_name, values: values}
+        end
       end
 
       def parse_update_query(args)

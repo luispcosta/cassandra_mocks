@@ -212,6 +212,13 @@ module Cassandra
               expect(statement.args).to eq(keyspace: nil, table: 'table', values: {'category' => 'goodbye', 'message' => 'world', 'sub_message' => 'cruel'})
             end
           end
+
+          context 'when checking if the record already exists' do
+            it 'should include an option to describe this behaviour' do
+              statement = Statement.new("INSERT INTO table (pk1, ck1) VALUES (hello, world) IF NOT EXISTS", [])
+              expect(statement.args).to include(check_exists: true)
+            end
+          end
         end
 
         shared_examples_for 'a query with a restriction' do |keyword|
