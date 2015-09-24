@@ -76,10 +76,14 @@ module Cassandra
       end
 
       describe '#execute_async' do
-        let(:query) { 'SELECT * FROM everything' }
+        let(:query) { "CREATE KEYSPACE fake WITH REPLICATION = { 'class' : 'EXTREME', 'replication_factor' : 33333 }" }
 
         it 'should return a Cassandra::Future' do
           expect(subject.execute_async(query)).to be_a_kind_of(Cassandra::Future)
+        end
+
+        it 'should resolve to an empty hash' do
+          expect(subject.execute_async(query).get).to eq({})
         end
 
         describe 'with a CREATE KEYSPACE query' do
