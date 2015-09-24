@@ -27,7 +27,7 @@ module Cassandra
       def execute_async(cql, *args)
         future = cql.is_a?(Statement) ? Cassandra::Future.value(cql.fill_params(args)) : prepare_async(cql)
         future.then do |statement|
-          result = {}
+          result = []
           case statement.action
             when :create_keyspace
               cluster.add_keyspace(statement.args[:keyspace])
@@ -65,7 +65,7 @@ module Cassandra
       def insert_query(result, statement)
         check_exists = !!statement.args[:check_exists]
         inserted = cluster.keyspace(keyspace_for_statement(statement)).table(statement.args[:table]).insert(statement.args[:values], check_exists: check_exists)
-        result.merge!('[applied]' => inserted) if check_exists
+        result << {'[applied]' => inserted} if check_exists
       end
 
       def select_query(statement)

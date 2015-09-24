@@ -83,7 +83,7 @@ module Cassandra
         end
 
         it 'should resolve to an empty hash' do
-          expect(subject.execute_async(query).get).to eq({})
+          expect(subject.execute_async(query).get).to eq([])
         end
 
         describe 'with a CREATE KEYSPACE query' do
@@ -206,14 +206,14 @@ module Cassandra
           end
 
           it 'should resolve to an empty hash' do
-            expect(subject.execute_async(query).get).to eq({})
+            expect(subject.execute_async(query).get).to eq([])
           end
 
           context 'when checking if the record already exists' do
             let(:query) { "INSERT INTO #{table_name} (#{column_names*','}) VALUES (#{quoted_column_values*','}) IF NOT EXISTS" }
 
             it 'should resolve to a hash indicating that the record was inserted successfully' do
-              expect(subject.execute_async(query).get).to eq({'[applied]' => true})
+              expect(subject.execute_async(query).get).to eq([{'[applied]' => true}])
             end
 
             context 'when the row has already been inserted' do
@@ -227,7 +227,7 @@ module Cassandra
               end
 
               it 'should resolve to a hash indicating a failure to insert the record' do
-                expect(subject.execute_async(query).get).to eq({'[applied]' => false})
+                expect(subject.execute_async(query).get).to eq([{'[applied]' => false}])
               end
             end
           end
