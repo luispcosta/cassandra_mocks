@@ -34,7 +34,7 @@ module Cassandra
             when :create_table
               cluster.keyspace(keyspace).add_table(statement.args[:table], statement.args[:primary_key], statement.args[:columns])
             when :insert
-              cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).insert(statement.args[:values])
+              cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).insert(statement.args[:values], statement.args.slice(:check_exists))
             when :update
               update_query(statement)
             when :truncate

@@ -205,6 +205,18 @@ module Cassandra
             expect(table.rows).to eq([expected_row])
           end
 
+          context 'when the record already exists and checking if the record already exists' do
+            let(:old_row) { expected_row.merge('description' => 'introduction to duplicate records') }
+            let(:query) { "INSERT INTO #{table_name} (#{column_names*','}) VALUES (#{quoted_column_values*','}) IF NOT EXISTS" }
+
+            before { table.insert(old_row) }
+
+            it 'should add a row into the specified table' do
+              subject.execute_async(query).get
+              expect(table.rows).to eq([old_row])
+            end
+          end
+
           context 'with a different table' do
             let(:table_name) { 'products' }
 
