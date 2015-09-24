@@ -25,6 +25,14 @@ module Cassandra
             end
           end
 
+          context 'when the column does not exist' do
+            let(:row) { {'field2' => 27} }
+
+            it 'should assume a default value of 0' do
+              expect(subject.apply(row)).to eq({'field1' => 1, 'field2' => 27})
+            end
+          end
+
           context 'with a different amount' do
             let(:amount) { 5 }
 
