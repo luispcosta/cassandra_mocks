@@ -524,6 +524,17 @@ module Cassandra
               expect(table.select('*')).to eq([expected_row, expected_row_two])
             end
           end
+
+          context 'when the update contains arithmetic' do
+            let(:row) { {'pk1' => 'books', 'ck1' => 'mystery', 'field1' => 17} }
+            let(:query) { "UPDATE #{table_name} SET field1 = field1 + 3 WHERE pk1 = 'books'" }
+
+            it 'should apply the arithmetic to the specified field' do
+              subject.execute_async(query).get
+              expected_row = row.merge('field1' => 20)
+              expect(table.select('*')).to eq([expected_row])
+            end
+          end
         end
 
         context 'when the query is a statement' do

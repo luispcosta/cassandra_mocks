@@ -38,7 +38,13 @@ module Cassandra
               table = cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table])
               rows_to_update = table.select('*', statement.args[:filter])
               rows_to_update.each do |row|
-                updated_row = row.merge(statement.args[:values])
+                updated_row = statement.args[:values].inject(row.dup) do |memo, (column, value)|
+                  if value.is_a?(Statement::Arithmetic)
+                    value.apply(memo)
+                  else
+                    memo.merge!(column => value)
+                  end
+                end
                 cluster.keyspace(statement.args[:keyspace] || keyspace).table(statement.args[:table]).insert(updated_row)
               end
             when :truncate
