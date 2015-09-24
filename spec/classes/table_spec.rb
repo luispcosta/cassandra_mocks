@@ -65,11 +65,22 @@ module Cassandra
             expect(subject.rows).to eq([other_attributes])
           end
 
+          it 'should return true' do
+            expect(subject.insert(other_attributes, check_exists: true)).to eq(true)
+          end
+
           context 'when requested to reject new entries' do
-            it 'should only keep the oldest copy of the record' do
+            before do
               subject.insert(attributes, check_exists: true)
+            end
+
+            it 'should only keep the oldest copy of the record' do
               subject.insert(other_attributes, check_exists: true)
               expect(subject.rows).to eq([attributes])
+            end
+
+            it 'should return false' do
+              expect(subject.insert(other_attributes, check_exists: true)).to eq(false)
             end
           end
 

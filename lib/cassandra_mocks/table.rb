@@ -17,11 +17,12 @@ module Cassandra
         end
 
         if prev_row_index
-          return if options[:check_exists]
+          return false if options[:check_exists]
           rows[prev_row_index] = attributes
         else
           rows << attributes
         end
+        true
       end
 
       def select(*columns)
