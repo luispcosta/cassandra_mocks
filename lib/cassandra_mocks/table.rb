@@ -12,7 +12,15 @@ module Cassandra
         validate_columns!(attributes)
         validate_primary_key_presence!(attributes)
 
-        rows << attributes
+        prev_row_index = rows.find_index do |row|
+          row.slice(*primary_key_names) == attributes.slice(*primary_key_names)
+        end
+
+        if prev_row_index
+          rows[prev_row_index] = attributes
+        else
+          rows << attributes
+        end
       end
 
       def select(*columns)

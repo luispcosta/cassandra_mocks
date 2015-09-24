@@ -55,6 +55,41 @@ module Cassandra
           end
         end
 
+        context 'with records containing the same primary key' do
+          let(:attributes) { {'pk1' => 10, 'ck1' => 'hello', 'field1' => 'world'} }
+          let(:other_attributes) { {'pk1' => 10, 'ck1' => 'hello', 'field1' => 'planet'} }
+
+          it 'should only keep the latest copy of the record' do
+            subject.insert(attributes)
+            subject.insert(other_attributes)
+            expect(subject.rows).to eq([other_attributes])
+          end
+
+          context 'with a different set of rows' do
+            let(:attributes) { {'pk1' => 10, 'ck1' => 'hello', 'field1' => 'world'} }
+            let(:attributes_two) { {'pk1' => 10, 'ck1' => 'goodbye', 'field1' => 'planet'} }
+            let(:attributes_three) { {'pk1' => 10, 'ck1' => 'goodbye', 'field1' => 'world'} }
+
+            it 'should keep only unique records' do
+              subject.insert(attributes)
+              subject.insert(attributes_two)
+              subject.insert(attributes_three)
+              expect(subject.rows).to match_array([attributes, attributes_three])
+            end
+          end
+
+          context 'with a different partition key, but the same clustering key' do
+            let(:attributes) { {'pk1' => 10, 'ck1' => 'hello', 'field1' => 'world'} }
+            let(:other_attributes) { {'pk1' => 11, 'ck1' => 'hello', 'field1' => 'planet'} }
+
+            it 'should keep both records' do
+              subject.insert(attributes)
+              subject.insert(other_attributes)
+              expect(subject.rows).to match_array([attributes, other_attributes])
+            end
+          end
+        end
+
         context 'with a record containing invalid columns' do
           let(:attributes) { {'pk1' => 15, 'ck1' => 'hello world', 'field2' => 'stuff'} }
 
@@ -431,9 +466,9 @@ module Cassandra
                   {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1'},
               ]
               subject.delete({'pk1' => 'partition 2',
-                                          'pk2' => 'additional partition 2',
-                                          'ck1' => 'clustering 1',
-                                          'ck2' => 'additional clustering 1'})
+                              'pk2' => 'additional partition 2',
+                              'ck1' => 'clustering 1',
+                              'ck2' => 'additional clustering 1'})
               expect(subject.rows).not_to include(*expected_results)
             end
           end
