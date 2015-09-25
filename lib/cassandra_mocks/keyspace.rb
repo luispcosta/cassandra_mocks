@@ -8,6 +8,8 @@ module Cassandra
       end
 
       def add_table(table_name, primary_key, columns)
+        raise Errors::AlreadyExistsError.new('Cannot create already existing table', 'MockStatement', nil, table_name) if @tables[table_name]
+
         partition_key = primary_key.shift
         partition_key_columns = partition_key_part(columns, partition_key)
         clustering_columns = partition_key_part(columns, primary_key)

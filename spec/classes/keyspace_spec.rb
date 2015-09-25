@@ -34,6 +34,13 @@ module Cassandra
           expect(subject.table(table_name)).to eq(table)
         end
 
+        context 'when the keyspace already exists' do
+          it 'should raise an error' do
+            subject.add_table(table_name, primary_key, columns)
+            expect{subject.add_table(table_name, primary_key, columns)}.to raise_error(Errors::AlreadyExistsError, 'Cannot create already existing table')
+          end
+        end
+
         context 'with a different keyspace name' do
           let(:name) { 'production_keys' }
 
