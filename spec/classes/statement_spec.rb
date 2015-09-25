@@ -327,7 +327,7 @@ module Cassandra
         end
 
         context 'when the query is an UPDATE query' do
-          it 'should be parsed as a delete' do
+          it 'should be parsed as a update' do
             statement = Statement.new('UPDATE table SET field1 = 55 WHERE pk1 = 19', [])
             expect(statement.action).to eq(:update)
           end
@@ -385,6 +385,13 @@ module Cassandra
               it 'should parse out the column operation' do
                 statement = Statement.new("UPDATE table SET other_field = other_field-5 WHERE pk1 = 'partitioner'", [])
                 expect(statement.args).to include(values: {'other_field' => Statement::Arithmetic.new(:minus, 'other_field', 5)})
+              end
+            end
+
+            context 'with a parameterized query' do
+              it 'should parse out the column operation' do
+                statement = Statement.new("UPDATE table SET other_field = other_field + ? WHERE pk1 = 'partitioner'", [7])
+                expect(statement.args).to include(values: {'other_field' => Statement::Arithmetic.new(:plus, 'other_field', 7)})
               end
             end
           end

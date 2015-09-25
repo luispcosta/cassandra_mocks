@@ -238,6 +238,9 @@ module Cassandra
       def mapped_value(args, value)
         if value.is_a?(Array)
           value.map { |value| parameterized_value(args, value) }
+        elsif value.is_a?(Arithmetic)
+          updated_amount = parameterized_value(args, value.amount)
+          Arithmetic.new(value.operation, value.column, updated_amount)
         else
           parameterized_value(args, value)
         end
