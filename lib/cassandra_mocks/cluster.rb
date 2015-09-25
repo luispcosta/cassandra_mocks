@@ -27,6 +27,7 @@ module Cassandra
       end
 
       def add_keyspace(name)
+        raise Errors::AlreadyExistsError.new('Cannot create already existing keyspace', 'MockStatement', name, nil) if @keyspaces[name]
         @keyspaces[name] = Keyspace.new(name)
       end
 

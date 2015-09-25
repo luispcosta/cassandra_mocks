@@ -84,6 +84,13 @@ module Cassandra
             expect(subject.keyspace('other_keyspace')).to eq(Keyspace.new('other_keyspace'))
           end
         end
+
+        context 'when the keyspace already exists' do
+          it 'should raise an error' do
+            subject.add_keyspace('other_keyspace')
+            expect{subject.add_keyspace('other_keyspace')}.to raise_error(Errors::AlreadyExistsError, 'Cannot create already existing keyspace')
+          end
+        end
       end
 
       describe '#drop_keyspace' do

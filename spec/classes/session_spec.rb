@@ -184,7 +184,7 @@ module Cassandra
           let(:table_name) { 'books' }
           let!(:table) do
             cluster.add_keyspace(keyspace)
-            cluster.add_keyspace(table_keyspace)
+            cluster.add_keyspace(table_keyspace) unless cluster.keyspace(table_keyspace)
             cluster.keyspace(table_keyspace).tap { |ks| ks.add_table(table_name, primary_key, columns) }.table(table_name)
           end
           let(:primary_key) { [['section'], 'genre'] }
@@ -259,7 +259,7 @@ module Cassandra
           let(:table_name) { 'books' }
           let!(:table) do
             cluster.add_keyspace(keyspace)
-            cluster.add_keyspace(table_keyspace)
+            cluster.add_keyspace(table_keyspace) unless cluster.keyspace(table_keyspace)
             cluster.keyspace(table_keyspace).tap do |ks|
               ks.add_table(table_name, [['pk1'], 'ck1'], {'pk1' => 'text', 'ck1' => 'text'})
             end.table(table_name)
@@ -319,7 +319,7 @@ module Cassandra
           let(:table_name) { 'table' }
           let!(:table) do
             cluster.add_keyspace(keyspace)
-            cluster.add_keyspace(table_keyspace)
+            cluster.add_keyspace(table_keyspace) unless cluster.keyspace(table_keyspace)
             cluster.keyspace(table_keyspace).tap do |ks|
               ks.add_table(table_name, [['pk1'], 'ck1'], {'pk1' => 'text', 'ck1' => 'text'})
             end.table(table_name)
@@ -362,7 +362,7 @@ module Cassandra
           let(:table_name) { 'books' }
           let!(:table) do
             cluster.add_keyspace(keyspace)
-            cluster.add_keyspace(table_keyspace)
+            cluster.add_keyspace(table_keyspace) unless cluster.keyspace(table_keyspace)
             cluster.keyspace(table_keyspace).tap do |ks|
               ks.add_table(table_name, primary_key, columns)
             end.table(table_name)
@@ -472,7 +472,7 @@ module Cassandra
           let(:table_name) { 'books' }
           let!(:table) do
             cluster.add_keyspace(keyspace)
-            cluster.add_keyspace(table_keyspace)
+            cluster.add_keyspace(table_keyspace) unless cluster.keyspace(table_keyspace)
             cluster.keyspace(table_keyspace).tap do |ks|
               ks.add_table(table_name, primary_key, columns)
             end.table(table_name)
