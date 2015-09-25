@@ -477,6 +477,19 @@ module Cassandra
           end
         end
 
+        context 'with an UPDATE query' do
+          let(:original_statement) do
+            Statement.new('UPDATE table SET field1 = ? WHERE pk1 = ?', [])
+          end
+          let(:args) { [7, 'boots'] }
+
+          it 'should duplicate the args, with the params filled in' do
+            expected_filter = {'pk1' => 'boots'}
+            expected_values = {'field1' => 7}
+            expect(subject.args).to eq(original_statement.args.merge(filter: expected_filter, values: expected_values))
+          end
+        end
+
         context 'with a query that does not require params' do
           let(:original_statement) do
             Statement.new('CREATE TABLE table(pk1 text, ck1 text, (pk1, ck1))', [])

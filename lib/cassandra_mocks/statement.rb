@@ -51,6 +51,9 @@ module Cassandra
               parameterize_args!(:values, params, statement)
             when :select, :delete
               parameterize_args!(:filter, params, statement)
+            when :update
+              parameterize_args!(:values, params, statement)
+              parameterize_args!(:filter, params, statement)
           end
         end
       end
