@@ -393,6 +393,13 @@ module Cassandra
                 statement = Statement.new("UPDATE table SET other_field = other_field + ? WHERE pk1 = 'partitioner'", [7])
                 expect(statement.args).to include(values: {'other_field' => Statement::Arithmetic.new(:plus, 'other_field', 7)})
               end
+
+              context 'when the restriction is also parameterized' do
+                it 'should use the right values for the restriction' do
+                  statement = Statement.new("UPDATE table SET other_field = other_field + ? WHERE pk1 = ?", [7, 'partitioner'])
+                  expect(statement.args).to include(filter: {'pk1' => 'partitioner'})
+                end
+              end
             end
           end
 

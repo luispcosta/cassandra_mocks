@@ -5,6 +5,7 @@ module Cassandra
 
       def initialize(cql, args)
         @cql = cql
+        @input_args = param_queue(args)
 
         type_token = next_token
         @action = type_token.type
@@ -28,14 +29,14 @@ module Cassandra
             parse_truncate_query
           end
         elsif type_token.insert?
-          parse_insert_query(args)
+          parse_insert_query
         elsif type_token.update?
-          parse_update_query(args)
+          parse_update_query
         elsif type_token.select?
-          parse_select_query(args)
+          parse_select_query
         elsif type_token.delete?
           next_token
-          parse_table_and_filter(args)
+          parse_table_and_filter
         end
       end
 
@@ -124,7 +125,7 @@ module Cassandra
         @args = {keyspace: keyspace_name, table: table_name}
       end
 
-      def parse_insert_query(args)
+      def parse_insert_query
         next_token
 
         keyspace_name, table_name = parsed_keyspace_and_table
@@ -134,7 +135,7 @@ module Cassandra
         2.times { next_token }
         insert_values = parenthesis_values(:rparen)
 
-        values = insert_args(insert_keys, insert_values, args)
+        values = insert_args(insert_keys, insert_values)
         if next_token.if?
           @args = {keyspace: keyspace_name, table: table_name, values: values, check_exists: true}
         else
@@ -142,24 +143,24 @@ module Cassandra
         end
       end
 
-      def parse_update_query(args)
+      def parse_update_query
         keyspace_name, table_name = parsed_keyspace_and_table
         next_token if keyspace_name
-        values, _ = parsed_filter(args, :where)
-        filter, _ = parsed_filter(args, :eof)
+        values, _ = parsed_filter(:where)
+        filter, _ = parsed_filter(:eof)
         @args = {keyspace: keyspace_name, table: table_name, values: values, filter: filter}
       end
 
-      def parse_select_query(args)
+      def parse_select_query
         select_columns = parenthesis_values(:from)
-        parse_table_and_filter(args)
+        parse_table_and_filter
         @args.merge!(columns: select_columns)
       end
 
-      def parse_table_and_filter(args)
+      def parse_table_and_filter
         keyspace_name, table_name = parsed_keyspace_and_table
 
-        filter, prev_token = parsed_filter(args, :limit)
+        filter, prev_token = parsed_filter(:limit)
 
         if prev_token.limit?
           limit = next_token.normalized_value
@@ -169,7 +170,7 @@ module Cassandra
         end
       end
 
-      def parsed_filter(args, end_token)
+      def parsed_filter(end_token)
         filter_keys = []
         filter_values = []
         prev_token = last_token
@@ -193,7 +194,7 @@ module Cassandra
           end
         end
 
-        filter = insert_args(filter_keys, filter_values, args)
+        filter = insert_args(filter_keys, filter_values)
         [filter, prev_token]
       end
 
@@ -227,28 +228,27 @@ module Cassandra
         end
       end
 
-      def insert_args(insert_keys, insert_values, args)
-        args = param_queue(args)
+      def insert_args(insert_keys, insert_values)
         insert_keys.count.times.inject({}) do |memo, index|
-          value = mapped_value(args, insert_values[index])
+          value = mapped_value(insert_values[index])
           memo.merge!(insert_keys[index] => value)
         end
       end
 
-      def mapped_value(args, value)
+      def mapped_value(value)
         if value.is_a?(Array)
-          value.map { |value| parameterized_value(args, value) }
+          value.map { |value| parameterized_value(value) }
         elsif value.is_a?(Arithmetic)
-          updated_amount = parameterized_value(args, value.amount)
+          updated_amount = parameterized_value(value.amount)
           Arithmetic.new(value.operation, value.column, updated_amount)
         else
-          parameterized_value(args, value)
+          parameterized_value(value)
         end
       end
 
-      def parameterized_value(args, value)
+      def parameterized_value(value)
         if value == '?'
-          args.pop unless args.empty?
+          @input_args.pop unless @input_args.empty?
         else
           value
         end
