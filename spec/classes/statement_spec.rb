@@ -478,15 +478,33 @@ module Cassandra
         end
 
         context 'with an UPDATE query' do
-          let(:original_statement) do
-            Statement.new('UPDATE table SET field1 = ? WHERE pk1 = ?', [])
-          end
+          let(:original_statement) { Statement.new('UPDATE table SET field1 = ? WHERE pk1 = ?', []) }
           let(:args) { [7, 'boots'] }
 
           it 'should duplicate the args, with the params filled in' do
             expected_filter = {'pk1' => 'boots'}
             expected_values = {'field1' => 7}
             expect(subject.args).to eq(original_statement.args.merge(filter: expected_filter, values: expected_values))
+          end
+
+          context 'with an UPDATE query using arithmetic' do
+            let(:original_statement) { Statement.new('UPDATE table SET field1 = field1 + ? WHERE pk1 = ?', []) }
+
+            it 'should fill in the Arithmetic parameter' do
+              expected_filter = {'pk1' => 'boots'}
+              expected_values = {'field1' => Statement::Arithmetic.new(:plus, 'field1', 7)}
+              expect(subject.args).to eq(original_statement.args.merge(filter: expected_filter, values: expected_values))
+            end
+
+            context 'when the arithmetic already has a value' do
+              let(:original_statement) { Statement.new('UPDATE table SET field1 = field1 + 5 WHERE pk1 = ?', []) }
+              let(:args) { ['boots'] }
+
+              it 'should leave the old value alone' do
+                expected_filter = {'pk1' => 'boots'}
+                expect(subject.args).to eq(original_statement.args.merge(filter: expected_filter))
+              end
+            end
           end
         end
 

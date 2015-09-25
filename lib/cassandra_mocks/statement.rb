@@ -74,7 +74,12 @@ module Cassandra
 
       def parameterize_args!(key, params, statement)
         values = args[key].inject({}) do |memo, (column, value)|
-          memo.merge!(column => (value || params.pop))
+          updated_value = if value.is_a?(Arithmetic)
+                            Arithmetic.new(value.operation, value.column, value.amount || params.pop)
+                          else
+                            (value || params.pop)
+                          end
+          memo.merge!(column => updated_value)
         end
         statement.args.merge!(key => values)
       end
