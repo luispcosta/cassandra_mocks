@@ -21,6 +21,8 @@ module Cassandra
             'WHERE' => :where,
             'ORDER' => :order,
             'BY' => :by,
+            'ASC' => :asc,
+            'DESC' => :desc,
             'LIMIT' => :limit,
             'AND' => :and,
             'IN' => :in,
