@@ -26,9 +26,9 @@ module Cassandra
       end
 
       def select(*columns)
-        filter = columns.pop if columns.last.is_a?(Hash)
-        limit = (filter.delete(:limit) if filter)
-        if filter && !filter.empty?
+        filter = select_filter(columns)
+        limit = filter.delete(:limit)
+        unless filter.empty?
           validate_partion_key_filter!(filter)
           validate_clustering_column_filter!(filter)
         end
@@ -66,6 +66,10 @@ module Cassandra
       end
 
       private
+
+      def select_filter(columns)
+        columns.last.is_a?(Hash) ? columns.pop : {}
+      end
 
       def validate_columns!(attributes)
         attributes.keys.each do |column|
