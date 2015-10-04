@@ -154,8 +154,8 @@ module Cassandra
       def parse_update_query
         keyspace_name, table_name = parsed_keyspace_and_table
         next_token if keyspace_name
-        values, _ = parsed_filter(:where)
-        filter, _ = parsed_filter(:eof)
+        values = parsed_filter(:where)
+        filter = parsed_filter(:eof)
         @args = {keyspace: keyspace_name, table: table_name, values: values, filter: filter}
       end
 
@@ -168,16 +168,16 @@ module Cassandra
       def parse_table_and_filter
         keyspace_name, table_name = parsed_keyspace_and_table
 
-        filter, prev_token = parsed_filter(:limit, :order)
+        filter = parsed_filter(:limit, :order)
 
         @args = {keyspace: keyspace_name, table: table_name, filter: filter}
 
-        if prev_token.order?
+        if @last_token.order?
           next_token
           @args.merge!(order: parse_select_order)
         end
 
-        if prev_token.limit?
+        if @last_token.limit?
           limit = next_token.normalized_value
           @args = @args.merge!(limit: limit)
         end
@@ -226,8 +226,7 @@ module Cassandra
           end
         end
 
-        filter = insert_args(filter_keys, filter_values)
-        [filter, prev_token]
+        insert_args(filter_keys, filter_values)
       end
 
       def update_value(prev_token, value)

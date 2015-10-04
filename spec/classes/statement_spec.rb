@@ -316,13 +316,18 @@ module Cassandra
           end
 
           context 'with and ORDER provided' do
-            it 'should parse the restriction as a column filter with the specified limit' do
+            it 'should parse the restriction as a column filter with the specified order' do
               statement = Statement.new("SELECT * FROM everything WHERE pk1 = 'books' ORDER BY ck1 LIMIT 1", [])
               expect(statement.args).to include(order: {'ck1' => :asc})
             end
 
+            it 'should retain the limit' do
+              statement = Statement.new("SELECT * FROM everything WHERE pk1 = 'books' ORDER BY ck1 LIMIT 77", [])
+              expect(statement.args).to include(limit: 77)
+            end
+
             context 'with a different ORDER specified' do
-              it 'should parse the restriction as a column filter with the specified limit' do
+              it 'should parse the restriction as a column filter with the specified order' do
                 statement = Statement.new("SELECT * FROM everything WHERE pk1 = 'books' ORDER BY ck1 ASC, ck2 DESC", [])
                 expect(statement.args).to include(order: {'ck1' => :asc, 'ck2' => :desc})
               end
