@@ -314,6 +314,20 @@ module Cassandra
               expect(statement.args).to include(limit: 3)
             end
           end
+
+          context 'with and ORDER provided' do
+            it 'should parse the restriction as a column filter with the specified limit' do
+              statement = Statement.new("SELECT * FROM everything WHERE pk1 = 'books' ORDER BY ck1 LIMIT 1", [])
+              expect(statement.args).to include(order: {'ck1' => :asc})
+            end
+
+            context 'with a different ORDER specified' do
+              it 'should parse the restriction as a column filter with the specified limit' do
+                statement = Statement.new("SELECT * FROM everything WHERE pk1 = 'books' ORDER BY ck1 ASC, ck2 DESC", [])
+                expect(statement.args).to include(order: {'ck1' => :asc, 'ck2' => :desc})
+              end
+            end
+          end
         end
 
         context 'when the query is a DELETE query' do

@@ -168,21 +168,42 @@ module Cassandra
       def parse_table_and_filter
         keyspace_name, table_name = parsed_keyspace_and_table
 
-        filter, prev_token = parsed_filter(:limit)
+        filter, prev_token = parsed_filter(:limit, :order)
+
+        @args = {keyspace: keyspace_name, table: table_name, filter: filter}
+
+        if prev_token.order?
+          next_token
+
+          order = {}
+          prev_column = nil
+          token = next_token
+          until token.eof? || token.limit?
+            if token.desc?
+              order[prev_column] = :desc
+            elsif token.asc?
+              order[prev_column] = :asc
+            elsif token.comma?
+            else
+              order[token.value] = :asc
+              prev_column = token.value
+            end
+            token = next_token
+          end
+          @args.merge!(order: order)
+        end
 
         if prev_token.limit?
           limit = next_token.normalized_value
-          @args = {keyspace: keyspace_name, table: table_name, filter: filter, limit: limit}
-        else
-          @args = {keyspace: keyspace_name, table: table_name, filter: filter}
+          @args = @args.merge!(limit: limit)
         end
       end
 
-      def parsed_filter(end_token)
+      def parsed_filter(*end_tokens)
         filter_keys = []
         filter_values = []
         prev_token = last_token
-        until tokens.empty? || prev_token.type == end_token
+        until tokens.empty? || end_tokens.include?(prev_token.type)
           filter_keys << next_token.value
           next_token
           value_token = next_token
