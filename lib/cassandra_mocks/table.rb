@@ -28,6 +28,7 @@ module Cassandra
       def select(*columns)
         filter = select_filter(columns)
         limit = filter.delete(:limit)
+        order = select_order(filter)
         unless filter.empty?
           validate_partion_key_filter!(filter)
           validate_clustering_column_filter!(filter)
@@ -35,7 +36,7 @@ module Cassandra
 
         filtered_rows = filtered_rows(filter)
         sorted_rows = filtered_rows.sort do |lhs, rhs|
-          compare_rows(0, lhs, rhs)
+          compare_rows(0, lhs, rhs, order)
         end
 
         sorted_rows = sorted_rows[0...limit] if limit
@@ -69,6 +70,12 @@ module Cassandra
 
       def select_filter(columns)
         columns.last.is_a?(Hash) ? columns.pop : {}
+      end
+
+      def select_order(filter)
+        (filter.delete(:order) || {}).inject(Hash.new(1)) do |memo, (key, value)|
+          memo.merge!(key => value == :asc ? 1 : -1)
+        end
       end
 
       def validate_columns!(attributes)
@@ -114,14 +121,19 @@ module Cassandra
         raise Cassandra::Errors::InvalidError.new("Missing partition key part(s) #{missing_partition_keys.map(&:inspect) * ', '}", 'MockStatement') unless missing_partition_keys.empty?
       end
 
-      def compare_rows(primary_key_index, lhs, rhs)
+      def compare_rows(primary_key_index, lhs, rhs, order)
         return 0 if primary_key_names[primary_key_index].nil?
 
         if primary_key_part(lhs, primary_key_index) == primary_key_part(rhs, primary_key_index)
-          compare_rows(primary_key_index + 1, lhs, rhs)
+          compare_rows(primary_key_index + 1, lhs, rhs, order)
         else
-          primary_key_part(lhs, primary_key_index) <=> primary_key_part(rhs, primary_key_index)
+          comparison = primary_key_part(lhs, primary_key_index) <=> primary_key_part(rhs, primary_key_index)
+          order_comparison(comparison, order, primary_key_names[primary_key_index])
         end
+      end
+
+      def order_comparison(comparison, order, primary_key)
+        comparison * order[primary_key]
       end
 
       def primary_key_part(row, primary_key_index)

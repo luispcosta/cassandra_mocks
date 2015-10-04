@@ -230,6 +230,28 @@ module Cassandra
               expect(subject.select('*')).to eq(expected_results)
             end
           end
+
+          context 'when specifying a different order' do
+            it 'should sort by partition key, then by clustering columns in the specified order' do
+              subject.insert({'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 2'})
+              expected_results = [
+                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 3'},
+                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 2'},
+              ]
+              expect(subject.select('*', order: {'ck2' => :desc})).to eq(expected_results)
+            end
+
+            context 'with a different ordering' do
+              it 'should sort by partition key, then by clustering columns in the specified order' do
+                subject.insert({'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 2'})
+                expected_results = [
+                    {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 2'},
+                    {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 3'},
+                ]
+                expect(subject.select('*', order: {'ck2' => :asc})).to eq(expected_results)
+              end
+            end
+          end
         end
 
         context 'when selecting a specific column' do
