@@ -19,6 +19,8 @@ module Cassandra
             'DELETE' => :delete,
             'FROM' => :from,
             'WHERE' => :where,
+            'ORDER' => :order,
+            'BY' => :by,
             'LIMIT' => :limit,
             'AND' => :and,
             'IN' => :in,
