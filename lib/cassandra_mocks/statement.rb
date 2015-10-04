@@ -174,29 +174,32 @@ module Cassandra
 
         if prev_token.order?
           next_token
-
-          order = {}
-          prev_column = nil
-          token = next_token
-          until token.eof? || token.limit?
-            if token.desc?
-              order[prev_column] = :desc
-            elsif token.asc?
-              order[prev_column] = :asc
-            elsif token.comma?
-            else
-              order[token.value] = :asc
-              prev_column = token.value
-            end
-            token = next_token
-          end
-          @args.merge!(order: order)
+          @args.merge!(order: parse_select_order)
         end
 
         if prev_token.limit?
           limit = next_token.normalized_value
           @args = @args.merge!(limit: limit)
         end
+      end
+
+      def parse_select_order
+        order = {}
+        prev_column = nil
+        token = next_token
+        until token.eof? || token.limit?
+          if token.desc?
+            order[prev_column] = :desc
+          elsif token.asc?
+            order[prev_column] = :asc
+          elsif token.comma?
+          else
+            order[token.value] = :asc
+            prev_column = token.value
+          end
+          token = next_token
+        end
+        order
       end
 
       def parsed_filter(*end_tokens)
