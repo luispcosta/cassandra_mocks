@@ -442,6 +442,15 @@ module Cassandra
               end
             end
 
+            describe 'handling column ordering' do
+              let(:query) { 'SELECT * FROM books ORDER BY ck1 DESC LIMIT 1' }
+
+              it 'should filter the query results by the provided restriction' do
+                expected_row = {'pk1' => 'other partition', 'ck1' => 'other clustering', 'field1' => 'dreams field'}
+                expect(subject.execute_async(query).get).to eq([expected_row])
+              end
+            end
+
             context 'with a different filter' do
               let(:query) { "SELECT * FROM books WHERE pk1 = 'other partition' AND ck1 = 'other clustering'" }
 

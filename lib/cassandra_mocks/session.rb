@@ -70,7 +70,8 @@ module Cassandra
 
       def select_query(statement)
         table = cluster.keyspace(keyspace_for_statement(statement)).table(statement.args[:table])
-        table.select(*statement.args[:columns], statement.args[:filter].merge(limit: statement.args[:limit]))
+        options = statement.args[:filter].merge(limit: statement.args[:limit], order: statement.args[:order])
+        table.select(*statement.args[:columns], options)
       end
 
       def update_query(statement)
