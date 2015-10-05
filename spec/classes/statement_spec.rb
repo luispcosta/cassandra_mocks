@@ -253,6 +253,18 @@ module Cassandra
               end
             end
 
+            context 'when the restriction provided is a comparison' do
+              it 'should support comparitive restrictions' do
+                statement = Statement.new("#{keyword} FROM everything WHERE ck1 >= 5", [])
+                expect(statement.args).to include(filter: {'ck1' => Statement::Comparitor.new(:ge, 'ck1', 5)})
+              end
+
+              it 'should support parameterized restrictions' do
+                statement = Statement.new("#{keyword} FROM everything WHERE ck99 <= ?", [75])
+                expect(statement.args).to include(filter: {'ck99' => Statement::Comparitor.new(:le, 'ck99', 75)})
+              end
+            end
+
             it 'should support parameterized queries' do
               statement = Statement.new("#{keyword} FROM everything WHERE pk1 = 'cds' and ck1 = ?", ['Jazz'])
               expect(statement.args).to include(filter: {'pk1' => 'cds', 'ck1' => 'Jazz'})

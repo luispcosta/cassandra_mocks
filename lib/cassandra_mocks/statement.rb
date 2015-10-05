@@ -213,6 +213,12 @@ module Cassandra
             next_token
             filter_values << parenthesis_values(:rparen)
             prev_token = next_token
+          elsif restrictor_token.ltri? || restrictor_token.rtri?
+            next_token
+            value_token = next_token
+            value = value_token.normalized_value
+            comparison_operator = restrictor_token.rtri? ? :ge : :le
+            filter_values << Comparitor.new(comparison_operator, filter_keys.last, value)
           else
             value_token = next_token
             prev_token = next_token
@@ -272,6 +278,9 @@ module Cassandra
         elsif value.is_a?(Arithmetic)
           updated_amount = parameterized_value(value.amount)
           Arithmetic.new(value.operation, value.column, updated_amount)
+        elsif value.is_a?(Comparitor)
+          updated_amount = parameterized_value(value.value)
+          Comparitor.new(value.operation, value.column, updated_amount)
         else
           parameterized_value(value)
         end
