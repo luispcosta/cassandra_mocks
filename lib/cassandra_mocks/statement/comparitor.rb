@@ -3,20 +3,21 @@ module Cassandra
     class Statement
       class Comparitor < Struct.new(:operation, :column, :value)
 
+        COMPARISON_MAP = {
+            lt: [-1],
+            le: [-1, 0],
+            eq: [0],
+            ge: [0, 1],
+            gt: [1]
+        }
+
+        def initialize(*args)
+          super
+          @comparitor = COMPARISON_MAP[operation]
+        end
+
         def check_against(row)
-          column_value = row[column]
-          case operation
-            when :lt
-              column_value < value
-            when :le
-              column_value <= value
-            when :eq
-              column_value == value
-            when :ge
-              column_value >= value
-            when :gt
-              column_value > value
-          end
+          @comparitor.include?(row[column] <=> value)
         end
 
       end
