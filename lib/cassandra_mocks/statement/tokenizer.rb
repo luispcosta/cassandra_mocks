@@ -75,7 +75,7 @@ module Cassandra
             elsif !in_name && !in_string && char == '.' && prev_char !~ /\d/
               translate_multiple_tokens(char, current_token)
               current_token = ''
-            elsif !in_name && !in_string && %w(, ( ) = ? + -).include?(char)
+            elsif !in_name && !in_string && %w(, ( ) < > = ? + -).include?(char)
               translate_multiple_tokens(char, current_token)
               current_token = ''
             elsif !in_name && !in_string && char == ' '

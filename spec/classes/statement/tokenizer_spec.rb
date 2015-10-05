@@ -152,7 +152,7 @@ module Cassandra
           end
 
           describe 'tokenizing statements lacking spaces' do
-            let(:statement) { 'SELECT * FROM everything WHERE something=? AND nothing IN (1+3,2-1)' }
+            let(:statement) { 'SELECT * FROM everything WHERE something<=? AND something_else>=? AND nothing IN (1+3,2-1)' }
 
             it 'should split the statement into tokens' do
               expected_tokens = [
@@ -162,6 +162,12 @@ module Cassandra
                   {id: 'everything'},
                   {where: 'WHERE'},
                   {id: 'something'},
+                  {ltri: '<'},
+                  {eql: '='},
+                  {parameter: '?'},
+                  {and: 'AND'},
+                  {id: 'something_else'},
+                  {rtri: '>'},
                   {eql: '='},
                   {parameter: '?'},
                   {and: 'AND'},
