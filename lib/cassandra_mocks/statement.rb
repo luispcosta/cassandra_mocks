@@ -76,6 +76,8 @@ module Cassandra
         values = args[key].inject({}) do |memo, (column, value)|
           updated_value = if value.is_a?(Arithmetic)
                             Arithmetic.new(value.operation, value.column, value.amount || params.pop)
+                          elsif value.is_a?(Comparitor)
+                            Comparitor.new(value.operation, value.column, value.value || params.pop)
                           else
                             (value || params.pop)
                           end

@@ -498,6 +498,24 @@ module Cassandra
           end
         end
 
+        context 'with a SELECT query using a Comparitor' do
+          let(:original_statement) { Statement.new('SELECT * FROM table WHERE ck1 > ?', []) }
+          let(:args) { [8] }
+
+          it 'should fill in the Comparitor parameter' do
+            expected_filter = {'ck1' => Statement::Comparitor.new(:gt, 'ck1', 8)}
+            expect(subject.args).to eq(original_statement.args.merge(filter: expected_filter))
+          end
+
+          context 'when the Comparitor already has a value' do
+            let(:original_statement) { Statement.new('SELECT * FROM table WHERE ck1 > 77', []) }
+
+            it 'should leave the old value alone' do
+              expect(subject.args).to eq(original_statement.args)
+            end
+          end
+        end
+
         context 'with a different query' do
           let(:original_statement) do
             Statement.new("SELECT * FROM everything WHERE section = ? AND genre = 'Romance' AND shard = ?", [])
