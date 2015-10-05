@@ -113,7 +113,16 @@ module Cassandra
       end
 
       def apply_filter(filter)
-        rows.select { |row| row.slice(*filter.keys) == filter }
+        rows.select do |row|
+          partial_row = row.slice(*filter.keys)
+          filter.all? do |column, value|
+            if value.is_a?(Statement::Comparitor)
+              value.check_against(partial_row)
+            else
+              partial_row[column] == value
+            end
+          end
+        end
       end
 
       def validate_partion_key_filter!(filter)

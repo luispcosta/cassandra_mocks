@@ -348,6 +348,30 @@ module Cassandra
               expect(subject.select('*', {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1'})).to eq(expected_results)
             end
 
+            context 'with a comparitor' do
+              it 'should return all records for that partition, matching the specified clustering columns' do
+                expected_results = [
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1'},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2'},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 1'},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'},
+                ]
+                comparitor = Statement::Comparitor.new(:ge, 'ck1', 'clustering 1')
+                expect(subject.select('*', {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => comparitor})).to eq(expected_results)
+              end
+
+              context 'with a different comparison' do
+                it 'should return all records for that partition, matching the specified clustering columns' do
+                  expected_results = [
+                      {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1'},
+                      {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2'},
+                  ]
+                  comparitor = Statement::Comparitor.new(:lt, 'ck1', 'clustering 2')
+                  expect(subject.select('*', {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => comparitor})).to eq(expected_results)
+                end
+              end
+            end
+
             it 'should raise an error if earlier clustering keys are not restricted' do
               expect do
                 subject.select('*', {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck2' => 'additional clustering 1'})
