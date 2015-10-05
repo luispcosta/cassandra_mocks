@@ -220,11 +220,7 @@ module Cassandra
                                true
                              end
             value = value_token.normalized_value
-            comparison_operator = if eql_comparison
-                                    restrictor_token.rtri? ? :ge : :le
-                                  else
-                                    restrictor_token.rtri? ? :gt : :lt
-                                  end
+            comparison_operator = comparison_operator(eql_comparison, restrictor_token)
             filter_values << Comparitor.new(comparison_operator, filter_keys.last, value)
           else
             value_token = next_token
@@ -240,6 +236,14 @@ module Cassandra
         end
 
         insert_args(filter_keys, filter_values)
+      end
+
+      def comparison_operator(eql_comparison, restrictor_token)
+        if eql_comparison
+          restrictor_token.rtri? ? :ge : :le
+        else
+          restrictor_token.rtri? ? :gt : :lt
+        end
       end
 
       def update_value(prev_token, value)
