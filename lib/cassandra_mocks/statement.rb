@@ -214,10 +214,17 @@ module Cassandra
             filter_values << parenthesis_values(:rparen)
             prev_token = next_token
           elsif restrictor_token.ltri? || restrictor_token.rtri?
-            next_token
             value_token = next_token
+            eql_comparison = if value_token.type == :eql
+                               value_token = next_token
+                               true
+                             end
             value = value_token.normalized_value
-            comparison_operator = restrictor_token.rtri? ? :ge : :le
+            comparison_operator = if eql_comparison
+                                    restrictor_token.rtri? ? :ge : :le
+                                  else
+                                    restrictor_token.rtri? ? :gt : :lt
+                                  end
             filter_values << Comparitor.new(comparison_operator, filter_keys.last, value)
           else
             value_token = next_token

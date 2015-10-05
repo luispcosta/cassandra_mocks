@@ -259,6 +259,20 @@ module Cassandra
                 expect(statement.args).to include(filter: {'ck1' => Statement::Comparitor.new(:ge, 'ck1', 5)})
               end
 
+              context 'with a non equal comparitor' do
+                it 'should support comparitive restrictions' do
+                  statement = Statement.new("#{keyword} FROM everything WHERE ck1 > 7", [])
+                  expect(statement.args).to include(filter: {'ck1' => Statement::Comparitor.new(:gt, 'ck1', 7)})
+                end
+
+                context 'with a different operator' do
+                  it 'should support comparitive restrictions' do
+                    statement = Statement.new("#{keyword} FROM everything WHERE ck1 < 17", [])
+                    expect(statement.args).to include(filter: {'ck1' => Statement::Comparitor.new(:lt, 'ck1', 17)})
+                  end
+                end
+              end
+
               it 'should support parameterized restrictions' do
                 statement = Statement.new("#{keyword} FROM everything WHERE ck99 <= ?", [75])
                 expect(statement.args).to include(filter: {'ck99' => Statement::Comparitor.new(:le, 'ck99', 75)})
