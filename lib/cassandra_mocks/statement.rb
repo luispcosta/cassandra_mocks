@@ -205,37 +205,44 @@ module Cassandra
       def parsed_filter(*end_tokens)
         filter_keys = []
         filter_values = []
-        prev_token = last_token
-        until tokens.empty? || end_tokens.include?(prev_token.type)
+        until tokens.empty? || end_tokens.include?(last_token.type)
           filter_keys << next_token.value
           restrictor_token = next_token
           if restrictor_token.type == :in
             next_token
             filter_values << parenthesis_values(:rparen)
-            prev_token = next_token
+            next_token
           elsif restrictor_token.ltri? || restrictor_token.rtri?
-            value_token = next_token
-            eql_comparison = if value_token.type == :eql
-                               value_token = next_token
-                               true
-                             end
-            value = value_token.normalized_value
-            comparison_operator = comparison_operator(eql_comparison, restrictor_token)
-            filter_values << Comparitor.new(comparison_operator, filter_keys.last, value)
+            parse_comparison_restriction(filter_keys, filter_values, restrictor_token)
           else
-            value_token = next_token
-            prev_token = next_token
-            value = value_token.normalized_value
-            update_value = update_value(prev_token, value)
-            if update_value
-              value = update_value
-              prev_token = next_token
-            end
-            filter_values << value
+            parse_single_restriction(filter_values)
           end
         end
 
         insert_args(filter_keys, filter_values)
+      end
+
+      def parse_comparison_restriction(filter_keys, filter_values, restrictor_token)
+        value_token = next_token
+        eql_comparison = if value_token.type == :eql
+                           value_token = next_token
+                           true
+                         end
+        value = value_token.normalized_value
+        comparison_operator = comparison_operator(eql_comparison, restrictor_token)
+        filter_values << Comparitor.new(comparison_operator, filter_keys.last, value)
+      end
+
+      def parse_single_restriction(filter_values)
+        value_token = next_token
+        next_token
+        value = value_token.normalized_value
+        update_value = update_value(last_token, value)
+        if update_value
+          value = update_value
+          next_token
+        end
+        filter_values << value
       end
 
       def comparison_operator(eql_comparison, restrictor_token)
