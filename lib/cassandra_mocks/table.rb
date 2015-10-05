@@ -118,6 +118,8 @@ module Cassandra
           filter.all? do |column, value|
             if value.is_a?(Statement::Comparitor)
               value.check_against(partial_row)
+            elsif value.is_a?(Array)
+              value.include?(partial_row[column])
             else
               partial_row[column] == value
             end

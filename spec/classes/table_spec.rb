@@ -277,7 +277,7 @@ module Cassandra
           let(:clustering_key) { [ck_part_one, ck_part_two] }
           let(:list_of_attributes) do
             (1..2).map do |pk1|
-              (1..2).map do |pk2|
+              (1..3).map do |pk2|
                 (1..2).map do |ck1|
                   (1..2).map do |ck2|
                     {
@@ -319,6 +319,22 @@ module Cassandra
                     {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'},
                 ]
                 expect(subject.select('*', {'pk1' => 'partition 2', 'pk2' => 'additional partition 2'})).to eq(expected_results)
+              end
+            end
+
+            context 'when the partition key is IN restricted' do
+              it 'should return all records for that partition range' do
+                expected_results = [
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 1', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1'},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 1', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2'},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 1', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 1'},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 1', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1'},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2'},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 1'},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'},
+                ]
+                expect(subject.select('*', {'pk1' => 'partition 2', 'pk2' => ['additional partition 1', 'additional partition 3']})).to eq(expected_results)
               end
             end
 
