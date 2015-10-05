@@ -208,13 +208,13 @@ module Cassandra
         prev_token = last_token
         until tokens.empty? || end_tokens.include?(prev_token.type)
           filter_keys << next_token.value
-          next_token
-          value_token = next_token
-          if value_token.type == :in
+          restrictor_token = next_token
+          if restrictor_token.type == :in
             next_token
             filter_values << parenthesis_values(:rparen)
             prev_token = next_token
           else
+            value_token = next_token
             prev_token = next_token
             value = value_token.normalized_value
             update_value = update_value(prev_token, value)

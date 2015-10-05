@@ -243,12 +243,12 @@ module Cassandra
 
             context 'when the restriction provided is a range' do
               it 'should support range restrictions using IN' do
-                statement = Statement.new("#{keyword} FROM everything WHERE pk1 = IN ('Videos', 'Games')", [])
+                statement = Statement.new("#{keyword} FROM everything WHERE pk1 IN ('Videos', 'Games')", [])
                 expect(statement.args).to include(filter: {'pk1' => %w(Videos Games)})
               end
 
               it 'should support parameterized restrictions' do
-                statement = Statement.new("#{keyword} FROM everything WHERE pk1 = IN (?, 'Games') and ck1 = ?", %w(Videos History))
+                statement = Statement.new("#{keyword} FROM everything WHERE pk1 IN (?, 'Games') and ck1 = ?", %w(Videos History))
                 expect(statement.args).to include(filter: {'pk1' => %w(Videos Games), 'ck1' => 'History'})
               end
             end
