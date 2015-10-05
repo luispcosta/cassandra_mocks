@@ -172,12 +172,12 @@ module Cassandra
 
         @args = {keyspace: keyspace_name, table: table_name, filter: filter}
 
-        if @last_token.order?
+        if last_token.order?
           next_token
           @args.merge!(order: parse_select_order)
         end
 
-        if @last_token.limit?
+        if last_token.limit?
           limit = next_token.normalized_value
           @args = @args.merge!(limit: limit)
         end
