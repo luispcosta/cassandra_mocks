@@ -233,6 +233,7 @@ module Cassandra
         value = value_token.normalized_value
         comparison_operator = comparison_operator(eql_comparison, restrictor_token)
         filter_values << Comparitor.new(comparison_operator, filter_keys.last, value)
+        next_token
       end
 
       def parse_single_restriction(filter_values)

@@ -507,6 +507,14 @@ module Cassandra
             expect(subject.args).to eq(original_statement.args.merge(filter: expected_filter))
           end
 
+          context 'with a LIMIT specified' do
+            let(:original_statement) { Statement.new('SELECT * FROM table WHERE ck1 > ? LIMIT 15', [5]) }
+
+            it 'should be able to parse a LIMIT' do
+              expect(subject.args).to eq(original_statement.args.merge(limit: 15))
+            end
+          end
+
           context 'when the Comparitor already has a value' do
             let(:original_statement) { Statement.new('SELECT * FROM table WHERE ck1 > 77', []) }
 
