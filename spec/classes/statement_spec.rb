@@ -524,6 +524,32 @@ module Cassandra
           end
         end
 
+        context 'with a SELECT query using an IN restriction' do
+          let(:original_statement) { Statement.new('SELECT * FROM table WHERE pk1 IN (?, ?)', []) }
+          let(:args) { [8, 91] }
+
+          it 'should fill in the range parameter' do
+            expected_filter = {'pk1' => [8, 91]}
+            expect(subject.args).to eq(original_statement.args.merge(filter: expected_filter))
+          end
+
+          context 'with a LIMIT specified' do
+            let(:original_statement) { Statement.new('SELECT * FROM table WHERE pk1 IN (?, ?) LIMIT 151', [8, 91]) }
+
+            it 'should be able to parse a LIMIT' do
+              expect(subject.args).to eq(original_statement.args.merge(limit: 151))
+            end
+          end
+
+          context 'when the Comparitor already has a value' do
+            let(:original_statement) { Statement.new('SELECT * FROM table WHERE pk1 IN (71, 72)', []) }
+
+            it 'should leave the old value alone' do
+              expect(subject.args).to eq(original_statement.args)
+            end
+          end
+        end
+
         context 'with a different query' do
           let(:original_statement) do
             Statement.new("SELECT * FROM everything WHERE section = ? AND genre = 'Romance' AND shard = ?", [])

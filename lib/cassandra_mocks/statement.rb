@@ -78,6 +78,8 @@ module Cassandra
                             Arithmetic.new(value.operation, value.column, value.amount || params.pop)
                           elsif value.is_a?(Comparitor)
                             Comparitor.new(value.operation, value.column, value.value || params.pop)
+                          elsif value.is_a?(Array)
+                            value.map { |value| value || params.pop }
                           else
                             (value || params.pop)
                           end
