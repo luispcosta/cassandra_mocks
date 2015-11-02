@@ -28,6 +28,18 @@ module Cassandra
               end
             end
 
+            context 'when creating a table only if it does already exist' do
+              let(:statement) { Statement.new('CREATE TABLE IF NOT EXISTS products (pk1 text, ck1 text, PRIMARY KEY (pk1, ck1))', []) }
+
+              it 'should parse out the table name' do
+                expect(statement.args).to include(table: 'products')
+              end
+
+              it 'should indicate that we should only attempt to create the table if it does not exist' do
+                expect(statement.args).to include(check_exists: true)
+              end
+            end
+
             it 'should parse out the column definitions' do
               statement = Statement.new('CREATE TABLE table_name (pk1 text PRIMARY KEY)', [])
               expect(statement.args).to include(columns: {'pk1' => 'text'})

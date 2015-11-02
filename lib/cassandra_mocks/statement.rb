@@ -101,7 +101,13 @@ module Cassandra
       end
 
       def parse_create_table
-        table_name = next_token.value
+        table_name_token = next_token
+        check_exists = if table_name_token.if?
+          next_token
+          next_token
+          table_name_token = next_token
+        end
+        table_name = table_name_token.value
 
         next_token
         column_name = next_token.value
@@ -128,7 +134,7 @@ module Cassandra
           primary_key = [partition_key, *primary_key_parts]
         end
 
-        @args = {table: table_name, columns: additional_columns.merge({column_name => column_type}), primary_key: primary_key}
+        @args = {table: table_name, check_exists: !!check_exists, columns: additional_columns.merge({column_name => column_type}), primary_key: primary_key}
       end
 
       def parse_truncate_query
