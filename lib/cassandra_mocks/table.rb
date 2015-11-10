@@ -79,10 +79,40 @@ module Cassandra
       end
 
       def validate_columns!(attributes)
-        attributes.keys.each do |column|
-          unless column_names.include?(column)
-            raise Errors::InvalidError.new(%Q{Invalid column, "#{column}", specified}, 'MockStatement')
+        attributes.each do |column_name, value|
+          column = find_column(column_name)
+          unless column
+            raise Errors::InvalidError.new(%Q{Invalid column, "#{column_name}", specified}, 'MockStatement')
           end
+
+          if value
+            case column.type
+              when 'double'
+                raise_unless_valid_type(column_name, Float, value)
+              when 'string'
+                raise_unless_valid_type(column_name, String, value)
+              when 'text'
+                raise_unless_valid_type(column_name, String, value)
+              when 'varchar'
+                raise_unless_valid_type(column_name, String, value)
+              when 'blob'
+                raise_unless_valid_type(column_name, String, value)
+              when 'int'
+                raise_unless_valid_type(column_name, Fixnum, value)
+              when 'uuid'
+                raise_unless_valid_type(column_name, Cassandra::Uuid, value)
+              when 'timeuuid'
+                raise_unless_valid_type(column_name, Cassandra::TimeUuid, value)
+              when 'timestamp'
+                raise_unless_valid_type(column_name, Time, value)
+            end
+          end
+        end
+      end
+
+      def raise_unless_valid_type(column_name, ruby_type, value)
+        unless value.is_a?(ruby_type)
+          raise Errors::InvalidError.new(%Q{Expected column "#{column_name}" to be of type "#{ruby_type}", got a(n) "#{value.class}"}, 'MockStatement')
         end
       end
 
@@ -165,6 +195,10 @@ module Cassandra
 
       def column_names
         columns.map(&:name)
+      end
+
+      def find_column(name)
+        columns.find { |column| column.name == name }
       end
 
       def column_map(partition_key, clustering_key, fields)

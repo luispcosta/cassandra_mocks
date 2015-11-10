@@ -6,11 +6,11 @@ module Cassandra
 
       let(:keyspace_name) { 'keyspace' }
       let(:name) { 'table' }
-      let(:pk_part_one) { Cassandra::Column.new('pk1', 'int', :asc) }
+      let(:pk_part_one) { Cassandra::Column.new('pk1', 'string', :asc) }
       let(:ck_part_one) { Cassandra::Column.new('ck1', 'string', :desc) }
-      let(:fields_part_one) { Cassandra::Column.new('field1', 'double', :asc) }
-      let(:pk_part_two) { Cassandra::Column.new('pk2', 'double', :asc) }
-      let(:ck_part_two) { Cassandra::Column.new('ck2', 'int', :desc) }
+      let(:fields_part_one) { Cassandra::Column.new('field1', 'string', :asc) }
+      let(:pk_part_two) { Cassandra::Column.new('pk2', 'string', :asc) }
+      let(:ck_part_two) { Cassandra::Column.new('ck2', 'string', :desc) }
       let(:fields_part_two) { Cassandra::Column.new('field2', 'string', :asc) }
       let(:partition_key) { [pk_part_one] }
       let(:clustering_key) { [ck_part_one] }
@@ -38,15 +38,55 @@ module Cassandra
       end
 
       describe '#insert' do
-        let(:attributes) { {'pk1' => 15, 'ck1' => 'hello world'} }
+        let(:attributes) { {'pk1' => '15', 'ck1' => 'hello world'} }
 
         it 'should create a record from the input row' do
           subject.insert(attributes)
           expect(subject.rows).to eq([attributes])
         end
 
+        context 'with an invalid column type' do
+          shared_examples_for 'a column type validation' do |cassandra_type, ruby_type, bad_type_sample, bad_type_sample_two|
+            let(:fields_part_one) { Cassandra::Column.new('field1', cassandra_type, :asc) }
+            let(:sample_bad_type) { bad_type_sample.class }
+            let(:sample_bad_type_two) { bad_type_sample_two.class }
+            let(:attributes) { {'pk1' => '15', 'ck1' => 'hello world', 'field1' => bad_type_sample} }
+
+            it 'should raise an error' do
+              expect { subject.insert(attributes) }.to raise_error(Cassandra::Errors::InvalidError, %Q{Expected column "field1" to be of type "#{ruby_type}", got a(n) "#{sample_bad_type}"})
+            end
+
+            context 'with a different value' do
+              let(:attributes) { {'pk1' => '15', 'ck1' => 'hello world', 'field1' => bad_type_sample_two} }
+
+              it 'should raise an error' do
+                expect { subject.insert(attributes) }.to raise_error(Cassandra::Errors::InvalidError, %Q{Expected column "field1" to be of type "#{ruby_type}", got a(n) "#{sample_bad_type_two}"})
+              end
+            end
+
+            context 'with a different column' do
+              let(:attributes) { {'pk1' => '15', 'ck1' => 'hello world', 'field3' => bad_type_sample} }
+              let(:fields_part_one) { Cassandra::Column.new('field3', cassandra_type, :asc) }
+
+              it 'should raise an error' do
+                expect { subject.insert(attributes) }.to raise_error(Cassandra::Errors::InvalidError, %Q{Expected column "field3" to be of type "#{ruby_type}", got a(n) "#{sample_bad_type}"})
+              end
+            end
+          end
+
+          it_behaves_like 'a column type validation', 'double', Float, 'world', 54
+          it_behaves_like 'a column type validation', 'string', String, 5.0, 57
+          it_behaves_like 'a column type validation', 'text', String, 5.0, 57
+          it_behaves_like 'a column type validation', 'varchar', String, 5.0, 57
+          it_behaves_like 'a column type validation', 'int', Fixnum, 5.0, Cassandra::Uuid.new(SecureRandom.uuid)
+          it_behaves_like 'a column type validation', 'uuid', Cassandra::Uuid, SecureRandom.uuid, 55444
+          it_behaves_like 'a column type validation', 'timeuuid', Cassandra::TimeUuid, SecureRandom.uuid, 55444
+          it_behaves_like 'a column type validation', 'timestamp', Time, '10:30:55', 1000
+          it_behaves_like 'a column type validation', 'blob', String, 99, 5.0
+        end
+
         context 'with multiple records' do
-          let(:other_attributes) { {'pk1' => 45, 'ck1' => 'goodbye', 'field1' => 'world'} }
+          let(:other_attributes) { {'pk1' => '45', 'ck1' => 'goodbye', 'field1' => 'world'} }
 
           it 'should be able to store multiple records' do
             subject.insert(attributes)
@@ -56,8 +96,8 @@ module Cassandra
         end
 
         context 'with records containing the same primary key' do
-          let(:attributes) { {'pk1' => 10, 'ck1' => 'hello', 'field1' => 'world'} }
-          let(:other_attributes) { {'pk1' => 10, 'ck1' => 'hello', 'field1' => 'planet'} }
+          let(:attributes) { {'pk1' => '10', 'ck1' => 'hello', 'field1' => 'world'} }
+          let(:other_attributes) { {'pk1' => '10', 'ck1' => 'hello', 'field1' => 'planet'} }
 
           it 'should only keep the latest copy of the record' do
             subject.insert(attributes)
@@ -85,9 +125,9 @@ module Cassandra
           end
 
           context 'with a different set of rows' do
-            let(:attributes) { {'pk1' => 10, 'ck1' => 'hello', 'field1' => 'world'} }
-            let(:attributes_two) { {'pk1' => 10, 'ck1' => 'goodbye', 'field1' => 'planet'} }
-            let(:attributes_three) { {'pk1' => 10, 'ck1' => 'goodbye', 'field1' => 'world'} }
+            let(:attributes) { {'pk1' => '10', 'ck1' => 'hello', 'field1' => 'world'} }
+            let(:attributes_two) { {'pk1' => '10', 'ck1' => 'goodbye', 'field1' => 'planet'} }
+            let(:attributes_three) { {'pk1' => '10', 'ck1' => 'goodbye', 'field1' => 'world'} }
 
             it 'should keep only unique records' do
               subject.insert(attributes)
@@ -98,8 +138,8 @@ module Cassandra
           end
 
           context 'with a different partition key, but the same clustering key' do
-            let(:attributes) { {'pk1' => 10, 'ck1' => 'hello', 'field1' => 'world'} }
-            let(:other_attributes) { {'pk1' => 11, 'ck1' => 'hello', 'field1' => 'planet'} }
+            let(:attributes) { {'pk1' => '10', 'ck1' => 'hello', 'field1' => 'world'} }
+            let(:other_attributes) { {'pk1' => '11', 'ck1' => 'hello', 'field1' => 'planet'} }
 
             it 'should keep both records' do
               subject.insert(attributes)
@@ -110,14 +150,14 @@ module Cassandra
         end
 
         context 'with a record containing invalid columns' do
-          let(:attributes) { {'pk1' => 15, 'ck1' => 'hello world', 'field2' => 'stuff'} }
+          let(:attributes) { {'pk1' => '15', 'ck1' => 'hello world', 'field2' => 'stuff'} }
 
           it 'should raise an error' do
             expect { subject.insert(attributes) }.to raise_error(Cassandra::Errors::InvalidError, 'Invalid column, "field2", specified')
           end
 
           context 'with an additional invalid column' do
-            let(:attributes) { {'field3' => 'garbage', 'pk1' => 15, 'ck1' => 'hello world', 'field2' => 'stuff'} }
+            let(:attributes) { {'field3' => 'garbage', 'pk1' => '15', 'ck1' => 'hello world', 'field2' => 'stuff'} }
 
             it 'should raise the error on the first invalid column found' do
               expect { subject.insert(attributes) }.to raise_error(Cassandra::Errors::InvalidError, 'Invalid column, "field3", specified')
@@ -133,7 +173,7 @@ module Cassandra
           end
 
           context 'with different missing attributes' do
-            let(:attributes) { {'pk1' => 53, 'ck1' => nil} }
+            let(:attributes) { {'pk1' => '53', 'ck1' => nil} }
 
             it 'should raise the error on the first invalid column found' do
               expect { subject.insert(attributes) }.to raise_error(Cassandra::Errors::InvalidError, 'Invalid null primary key part, "ck1"')
