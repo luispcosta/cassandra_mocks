@@ -177,6 +177,7 @@ module Cassandra
 
       def parse_table_and_filter
         keyspace_name, table_name = parsed_keyspace_and_table
+        next_token if keyspace_name
 
         filter = parsed_filter(:limit, :order)
 

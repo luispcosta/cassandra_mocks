@@ -241,6 +241,13 @@ module Cassandra
               expect(statement.args).to include(filter: {'pk1' => 'books'})
             end
 
+            context 'with a namespaced table' do
+              it 'should parse the restriction as a column filter' do
+                statement = Statement.new("#{keyword} FROM staging.everything WHERE pk1 = 'books'", [])
+                expect(statement.args).to include(filter: {'pk1' => 'books'})
+              end
+            end
+
             it 'should support multiple restrictions' do
               statement = Statement.new("#{keyword} FROM everything WHERE pk1 = 'cds' and ck1 = 'Rock'", [])
               expect(statement.args).to include(filter: {'pk1' => 'cds', 'ck1' => 'Rock'})
