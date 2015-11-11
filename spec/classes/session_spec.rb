@@ -587,6 +587,83 @@ module Cassandra
           end
         end
 
+        context 'with a DELETE query' do
+          let(:primary_key) { [['pk1'], 'ck1'] }
+          let(:columns) { {'pk1' => 'text', 'ck1' => 'text', 'field1' => 'counter'} }
+          let(:keyspace) { 'development' }
+          let(:table_keyspace) { keyspace }
+          let(:table_name) { 'books' }
+          let!(:table) do
+            cluster.add_keyspace(keyspace)
+            cluster.add_keyspace(table_keyspace) unless cluster.keyspace(table_keyspace)
+            cluster.keyspace(table_keyspace).tap do |ks|
+              ks.add_table(table_name, primary_key, columns)
+            end.table(table_name)
+          end
+          let(:row) { {'pk1' => 'books', 'ck1' => 'mystery', 'field1' => 5} }
+          let(:query) { "DELETE FROM #{table_name} WHERE pk1 = 'books' AND ck1 = 'mystery'" }
+
+          before { table.insert(row) }
+
+          it 'should delete the row with the specified values' do
+            subject.execute_async(query).get
+            expect(table.select('*')).to be_empty
+          end
+
+          context 'with a different table' do
+            let(:table_name) { 'book_counts' }
+
+            it 'should delete the row with the specified values' do
+              subject.execute_async(query).get
+              expect(table.select('*')).to be_empty
+            end
+          end
+
+          context 'with a namespaced table' do
+            let(:table_keyspace) { 'production_counters' }
+            let(:query) { "DELETE FROM #{table_keyspace}.#{table_name} WHERE pk1 = 'books' AND ck1 = 'mystery'" }
+
+            it 'should delete the row with the specified values' do
+              subject.execute_async(query).get
+              expect(table.select('*')).to be_empty
+            end
+          end
+
+          context 'with a different filter' do
+            let(:query) { "DELETE FROM #{table_name} WHERE pk1 = 'movies' AND ck1 = 'action'" }
+            let(:row) { {'pk1' => 'movies', 'ck1' => 'action', 'field1' => 5} }
+
+            it 'should delete the row with the specified values' do
+              subject.execute_async(query).get
+              expect(table.select('*')).to be_empty
+            end
+          end
+
+          context 'with multiple rows on different primary keys' do
+            let(:row_two) { {'pk1' => 'movies', 'ck1' => 'romance', 'field1' => 17} }
+            let(:query) { "DELETE FROM #{table_name} WHERE pk1 = 'books'" }
+
+            before { table.insert(row_two) }
+
+            it 'should delete both rows' do
+              subject.execute_async(query).get
+              expect(table.select('*')).to eq([row_two])
+            end
+          end
+
+          context 'with multiple rows to delete' do
+            let(:row_two) { {'pk1' => 'books', 'ck1' => 'romance', 'field1' => 17} }
+            let(:query) { "DELETE FROM #{table_name} WHERE pk1 = 'books'" }
+
+            before { table.insert(row_two) }
+
+            it 'should delete both rows' do
+              subject.execute_async(query).get
+              expect(table.select('*')).to be_empty
+            end
+          end
+        end
+
         context 'when the query is a statement' do
           let(:query) { "CREATE KEYSPACE keyspace_name WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 }" }
           let(:statement) { subject.prepare(query) }

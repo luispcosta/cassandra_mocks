@@ -45,6 +45,8 @@ module Cassandra
               cluster.keyspace(keyspace_for_statement(statement)).drop_table(statement.args[:table])
             when :select
               result = select_query(statement)
+            when :delete
+              delete_query(statement)
           end
           result
         end
@@ -72,6 +74,11 @@ module Cassandra
         table = cluster.keyspace(keyspace_for_statement(statement)).table(statement.args[:table])
         options = statement.args[:filter].merge(limit: statement.args[:limit], order: statement.args[:order])
         table.select(*statement.args[:columns], options)
+      end
+
+      def delete_query(statement)
+        table = cluster.keyspace(keyspace_for_statement(statement)).table(statement.args[:table])
+        table.delete(statement.args[:filter])
       end
 
       def update_query(statement)
