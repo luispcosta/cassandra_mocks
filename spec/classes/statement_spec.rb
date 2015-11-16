@@ -636,6 +636,16 @@ module Cassandra
         end
       end
 
+      describe '#bind' do
+        let(:args) { %w(nothing something) }
+        let(:original_statement) { Statement.new('DELETE FROM everything WHERE something = ? AND nothing = ?', []) }
+        let(:expected_statement) { original_statement.fill_params(args) }
+
+        subject { original_statement.bind(*args) }
+
+        it { is_expected.to eq(expected_statement) }
+      end
+
     end
   end
 end

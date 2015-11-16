@@ -58,6 +58,10 @@ module Cassandra
         end
       end
 
+      def bind(*args)
+        fill_params(args)
+      end
+
       def ==(rhs)
         rhs.is_a?(Statement) &&
             rhs.action == action &&
