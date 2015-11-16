@@ -673,6 +673,39 @@ module Cassandra
             expect(cluster.keyspace('keyspace_name')).to eq(Keyspace.new('keyspace_name'))
           end
         end
+
+        context 'when the query is a batch' do
+          let(:query) { 'INSERT INTO records (key, value) VALUES (?, ?)' }
+          let(:query_args) { %w(abc def) }
+          let(:dummy_future) { Cassandra::Future.value(true) }
+          let(:statement) { Cassandra::Statements::Batch.new }
+
+          before do
+            statement.add(query, *query_args)
+            allow(subject).to receive(:execute_async).and_call_original
+          end
+
+          it 'should execute all the underlying queries' do
+            expect(subject).to receive(:execute_async).with(query, *query_args).and_return(dummy_future)
+            subject.execute_async(statement)
+          end
+
+          context 'with multiple statements in the batch' do
+            let(:query_two) { 'INSERT INTO other_records (key, value) VALUES (?, ?)' }
+            let(:query_two_statement) { subject.prepare(query_two) }
+            let(:query_two_args) { %w(ghi jkl) }
+
+            before do
+              statement.add(query_two_statement, *query_two_args)
+            end
+
+            it 'should execute all the underlying queries' do
+              expect(subject).to receive(:execute_async).with(query_two_statement, *query_two_args).and_return(dummy_future)
+              subject.execute_async(statement)
+            end
+          end
+
+        end
       end
 
       describe '#execute' do

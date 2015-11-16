@@ -17,6 +17,7 @@
 require 'active_support/core_ext/class/attribute_accessors'
 require 'cassandra_mocks/result_page'
 require 'cassandra_mocks/table'
+require 'cassandra_mocks/statement/batch'
 require 'cassandra_mocks/statement/arithmetic'
 require 'cassandra_mocks/statement/comparitor'
 require 'cassandra_mocks/statement/token'

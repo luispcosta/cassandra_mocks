@@ -25,6 +25,13 @@ module Cassandra
       end
 
       def execute_async(cql, *args)
+        if cql.is_a?(Cassandra::Statements::Batch)
+          futures = cql.statements.map do |batched_statement|
+            execute_async(batched_statement.statement, *batched_statement.args)
+          end
+          return Cassandra::Future.all(futures)
+        end
+
         future = cql.is_a?(Statement) ? Cassandra::Future.value(cql.fill_params(args)) : prepare_async(cql)
         future.then do |statement|
           result = []
