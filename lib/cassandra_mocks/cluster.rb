@@ -39,6 +39,14 @@ module Cassandra
         @keyspaces.values.each(&block)
       end
 
+      def hosts
+        %w(DummyHost)
+      end
+
+      def find_replicas(*_)
+        []
+      end
+
     end
   end
 end

@@ -137,6 +137,16 @@ module Cassandra
         end
       end
 
+      describe '#hosts' do
+        its(:hosts) { is_expected.to eq(%w(DummyHost)) }
+      end
+
+      describe '#find_replicas' do
+        subject { cluster.find_replicas('keyspace', 'statement') }
+
+        it { is_expected.to be_empty }
+      end
+
     end
   end
 end
