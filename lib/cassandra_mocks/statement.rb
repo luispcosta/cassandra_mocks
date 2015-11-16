@@ -79,17 +79,26 @@ module Cassandra
       def parameterize_args!(key, params, statement)
         values = args[key].inject({}) do |memo, (column, value)|
           updated_value = if value.is_a?(Arithmetic)
-                            Arithmetic.new(value.operation, value.column, value.amount || params.pop)
+                            Arithmetic.new(value.operation, value.column, pending_value(value.amount, params))
                           elsif value.is_a?(Comparitor)
-                            Comparitor.new(value.operation, value.column, value.value || params.pop)
+                            Comparitor.new(value.operation, value.column, pending_value(value.value, params))
                           elsif value.is_a?(Array)
-                            value.map { |value| value || params.pop }
+                            value.map { |value| pending_value(value, params) }
                           else
-                            (value || params.pop)
+                            pending_value(value, params)
                           end
           memo.merge!(column => updated_value)
         end
         statement.args.merge!(key => values)
+      end
+
+      def pending_value(value, params)
+        if value == :value_pending
+          raise Errors::InvalidError.new('Not enough params provided to #fill_params', 'MockStatement') if params.empty?
+          params.pop
+        else
+          value
+        end
       end
 
       def tokens
@@ -107,10 +116,10 @@ module Cassandra
       def parse_create_table
         table_name_token = next_token
         check_exists = if table_name_token.if?
-          next_token
-          next_token
-          table_name_token = next_token
-        end
+                         next_token
+                         next_token
+                         table_name_token = next_token
+                       end
         table_name = table_name_token.value
 
         next_token
@@ -322,7 +331,11 @@ module Cassandra
 
       def parameterized_value(value)
         if value == '?'
-          @input_args.pop unless @input_args.empty?
+          if @input_args.empty?
+            :value_pending
+          else
+            @input_args.pop
+          end
         else
           value
         end

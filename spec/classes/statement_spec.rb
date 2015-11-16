@@ -484,8 +484,8 @@ module Cassandra
           context 'when arguments are specified at a later time' do
             subject { Statement.new('DELETE FROM everything WHERE something = ?', []) }
 
-            it 'should nullify the cql params' do
-              expect(subject.args).to include(filter: {'something' => nil})
+            it 'should treat the value as pending the cql params' do
+              expect(subject.args).to include(filter: {'something' => :value_pending})
             end
           end
         end
@@ -624,6 +624,15 @@ module Cassandra
           end
         end
 
+        context 'when the query specifies a null value' do
+          let(:original_statement) { Statement.new('SELECT * FROM everything WHERE something = ?', [nil]) }
+          let(:args) { [] }
+
+          it 'should save the null value' do
+            expect(subject.args).to eq(original_statement.args)
+          end
+        end
+
         context 'with a query that does not require params' do
           let(:original_statement) do
             Statement.new('CREATE TABLE table(pk1 text, ck1 text, (pk1, ck1))', [])
@@ -632,6 +641,15 @@ module Cassandra
 
           it 'should leave the args alone' do
             expect(subject.args).to eq(original_statement.args)
+          end
+        end
+
+        context 'when the user does not specify enough params for filling in' do
+          let(:original_statement) { Statement.new('SELECT * FROM everything WHERE something = ?', []) }
+          let(:args) { [] }
+
+          it 'should raise an error' do
+            expect { subject }.to raise_error(Cassandra::Errors::InvalidError, 'Not enough params provided to #fill_params')
           end
         end
       end
