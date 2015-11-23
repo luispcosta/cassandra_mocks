@@ -8,6 +8,7 @@ module Cassandra
       end
 
       def add_table(table_name, primary_key, columns)
+        raise Errors::InvalidError.new("Table name '#{table_name}' cannot be greater than 48 characters", 'MockStatement') if table_name.length > 48
         raise Errors::AlreadyExistsError.new('Cannot create already existing table', 'MockStatement', nil, table_name) if @tables[table_name]
 
         partition_key = primary_key.shift

@@ -34,10 +34,18 @@ module Cassandra
           expect(subject.table(table_name)).to eq(table)
         end
 
+        context 'when the table name is longer than 48 characters' do
+          let(:table_name) { 'supercalafragalisticexpialadoshiosomobobbydobbydoo-1234567890-table' }
+
+          it 'should raise an error indicating the table name is too long' do
+            expect { subject.add_table(table_name, primary_key, columns) }.to raise_error(Errors::InvalidError, "Table name '#{table_name}' cannot be greater than 48 characters")
+          end
+        end
+
         context 'when the keyspace already exists' do
           it 'should raise an error' do
             subject.add_table(table_name, primary_key, columns)
-            expect{subject.add_table(table_name, primary_key, columns)}.to raise_error(Errors::AlreadyExistsError, 'Cannot create already existing table')
+            expect { subject.add_table(table_name, primary_key, columns) }.to raise_error(Errors::AlreadyExistsError, 'Cannot create already existing table')
           end
         end
 
