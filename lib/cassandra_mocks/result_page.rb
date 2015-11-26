@@ -14,7 +14,9 @@ module Cassandra
       end
 
       def paging_state
+      end
 
+      def execution_info
       end
 
     end

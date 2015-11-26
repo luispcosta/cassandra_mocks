@@ -25,6 +25,10 @@ module Cassandra
         its(:paging_state) { is_expected.to be_nil }
       end
 
+      describe '#execution_info' do
+        its(:execution_info) { is_expected.to be_nil }
+      end
+
     end
   end
 end
