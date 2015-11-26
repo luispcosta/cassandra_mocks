@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'cassandra_mocks'
-  s.version = '0.0.7'
+  s.version = '0.0.8'
   s.license = 'Apache License 2.0'
   s.summary = ''
   s.description = ''
