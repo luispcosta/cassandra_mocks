@@ -290,6 +290,13 @@ module Cassandra
                     expect(statement.args).to include(filter: {'ck1' => Statement::Comparitor.new(:lt, 'ck1', 17)})
                   end
                 end
+
+                context 'with multiple key-values' do
+                  it 'should support comparing multiple keys' do
+                    statement = Statement.new("#{keyword} FROM everything WHERE (ck1,ck2) >= (5,4)", [])
+                    expect(statement.args).to include(filter: {%w(ck1 ck2) => Statement::Comparitor.new(:ge, %w(ck1 ck2), [5, 4])})
+                  end
+                end
               end
 
               it 'should support parameterized restrictions' do

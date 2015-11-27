@@ -230,7 +230,13 @@ module Cassandra
         filter_keys = []
         filter_values = []
         until tokens.empty? || end_tokens.include?(last_token.type)
-          filter_keys << next_token.value
+          next_key = next_token
+          filter_keys << if next_key.lparen?
+                           parenthesis_values(:rparen)
+                         else
+                           next_key.value
+                         end
+
           restrictor_token = next_token
           if restrictor_token.type == :in
             next_token
@@ -252,7 +258,13 @@ module Cassandra
                            value_token = next_token
                            true
                          end
-        value = value_token.normalized_value
+
+        value = if value_token.lparen?
+                  parenthesis_values(:rparen)
+                else
+                  value_token.normalized_value
+                end
+
         comparison_operator = comparison_operator(eql_comparison, restrictor_token)
         filter_values << Comparitor.new(comparison_operator, filter_keys.last, value)
         next_token
