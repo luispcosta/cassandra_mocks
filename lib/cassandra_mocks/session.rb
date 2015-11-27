@@ -34,7 +34,7 @@ module Cassandra
 
         future = cql.is_a?(Statement) ? Cassandra::Future.value(cql.fill_params(args)) : prepare_async(cql)
         future.then do |statement|
-          result = []
+          result = ResultPage.new
           case statement.action
             when :create_keyspace
               cluster.add_keyspace(statement.args[:keyspace])

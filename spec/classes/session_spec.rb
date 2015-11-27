@@ -205,7 +205,11 @@ module Cassandra
             expect(table.rows).to eq([expected_row])
           end
 
-          it 'should resolve to an empty hash' do
+          it 'should return a ResultPage' do
+            expect(subject.execute_async(query).get).to be_a_kind_of(ResultPage)
+          end
+
+          it 'should resolve to an empty ResultPage' do
             expect(subject.execute_async(query).get).to eq([])
           end
 
