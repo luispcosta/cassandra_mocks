@@ -426,6 +426,25 @@ module Cassandra
                   expect(subject.select('*', {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => comparitor})).to eq(expected_results)
                 end
               end
+
+              context 'with a comparitor comparing multiple columns' do
+                let(:comparer_keys) { %w(ck1 ck2) }
+                let(:comparer_values) { ['clustering 1', 'additional clustering 1'] }
+                let(:comparitor) { Statement::Comparitor.new(:ge, comparer_keys, comparer_values) }
+                let(:restriction) { {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', comparer_keys => comparitor} }
+                let(:expected_results) do
+                  [
+                      {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1'},
+                      {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2'},
+                      {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 1'},
+                      {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'},
+                  ]
+                end
+
+                it 'should return all records for that partition, matching the specified clustering columns' do
+                  expect(subject.select('*', restriction)).to eq(expected_results)
+                end
+              end
             end
 
             it 'should raise an error if earlier clustering keys are not restricted' do

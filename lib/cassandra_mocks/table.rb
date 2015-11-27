@@ -144,7 +144,7 @@ module Cassandra
 
       def apply_filter(filter)
         rows.select do |row|
-          partial_row = row.slice(*filter.keys)
+          partial_row = filter_slices_row(filter, row)
           filter.all? do |column, value|
             if value.is_a?(Statement::Comparitor)
               value.check_against(partial_row)
@@ -154,6 +154,17 @@ module Cassandra
               partial_row[column] == value
             end
           end
+        end
+      end
+
+      def filter_slices_row(filter, row)
+        filter.keys.inject({}) do |memo, key, _|
+          value = if key.is_a?(Array)
+                    row.values_at(*key)
+                  else
+                    row[key]
+                  end
+          memo.merge!(key => value)
         end
       end
 
