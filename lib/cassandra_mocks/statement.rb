@@ -230,12 +230,7 @@ module Cassandra
         filter_keys = []
         filter_values = []
         until tokens.empty? || end_tokens.include?(last_token.type)
-          next_key = next_token
-          filter_keys << if next_key.lparen?
-                           parenthesis_values(:rparen)
-                         else
-                           next_key.value
-                         end
+          filter_keys << next_filter_key(next_token)
 
           restrictor_token = next_token
           if restrictor_token.type == :in
@@ -258,16 +253,19 @@ module Cassandra
                            value_token = next_token
                            true
                          end
-
-        value = if value_token.lparen?
-                  parenthesis_values(:rparen)
-                else
-                  value_token.normalized_value
-                end
+        value = next_filter_key(value_token)
 
         comparison_operator = comparison_operator(eql_comparison, restrictor_token)
         filter_values << Comparitor.new(comparison_operator, filter_keys.last, value)
         next_token
+      end
+
+      def next_filter_key(next_key)
+        if next_key.lparen?
+          parenthesis_values(:rparen)
+        else
+          next_key.normalized_value
+        end
       end
 
       def parse_single_restriction(filter_values)
