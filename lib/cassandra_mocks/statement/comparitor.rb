@@ -18,12 +18,21 @@ module Cassandra
 
         def check_against(row)
           if column.is_a?(Array)
-            row[column].each_with_index.all? do |row_value, index|
-              @comparitor.include?(row_value <=> value[index])
-            end
+            check_against_array(row[column])
           else
             @comparitor.include?(row[column] <=> value)
           end
+        end
+
+        def check_against_array(row_values, index = 0, prev_result = false)
+          row_value = row_values[index]
+          comparison_value = value[index]
+          return prev_result unless row_value
+
+          comparison = @comparitor.include?(row_value <=> comparison_value)
+          return comparison if row_value != comparison_value
+
+          check_against_array(row_values, index+1, comparison)
         end
 
       end

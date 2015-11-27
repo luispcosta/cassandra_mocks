@@ -128,6 +128,10 @@ module Cassandra
                 let(:row_values) { [1, 1, 0] }
                 it { is_expected.to eq(false) }
               end
+              context 'with a row with one part greater and one part smaller' do
+                let(:row_values) { [1, 2, 0] }
+                it { is_expected.to eq(true) }
+              end
             end
 
             context 'with a ==' do
