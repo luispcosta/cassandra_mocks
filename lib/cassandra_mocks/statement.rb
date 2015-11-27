@@ -81,7 +81,12 @@ module Cassandra
           updated_value = if value.is_a?(Arithmetic)
                             Arithmetic.new(value.operation, value.column, pending_value(value.amount, params))
                           elsif value.is_a?(Comparitor)
-                            Comparitor.new(value.operation, value.column, pending_value(value.value, params))
+                            if value.value.is_a?(Array)
+                              new_values = value.value.map { |value| pending_value(value, params) }
+                              Comparitor.new(value.operation, value.column, new_values)
+                            else
+                              Comparitor.new(value.operation, value.column, pending_value(value.value, params))
+                            end
                           elsif value.is_a?(Array)
                             value.map { |value| pending_value(value, params) }
                           else
@@ -312,7 +317,7 @@ module Cassandra
             if key.lparen?
               insert_values << parenthesis_values(:rparen)
             elsif !key.comma?
-              insert_values << key.normalized_value unless key.comma?
+              insert_values << parameterized_value(key.normalized_value) unless key.comma?
             end
           end
         end

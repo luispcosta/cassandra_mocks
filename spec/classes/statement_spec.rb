@@ -293,8 +293,8 @@ module Cassandra
 
                 context 'with multiple key-values' do
                   it 'should support comparing multiple keys' do
-                    statement = Statement.new("#{keyword} FROM everything WHERE (ck1,ck2) >= (5,4)", [])
-                    expect(statement.args).to include(filter: {%w(ck1 ck2) => Statement::Comparitor.new(:ge, %w(ck1 ck2), [5, 4])})
+                    statement = Statement.new("#{keyword} FROM everything WHERE (ck1,ck2) >= (5,?)", [])
+                    expect(statement.args).to include(filter: {%w(ck1 ck2) => Statement::Comparitor.new(:ge, %w(ck1 ck2), [5, :value_pending])})
                   end
                 end
               end
@@ -531,6 +531,16 @@ module Cassandra
           it 'should fill in the Comparitor parameter' do
             expected_filter = {'ck1' => Statement::Comparitor.new(:gt, 'ck1', 8)}
             expect(subject.args).to eq(original_statement.args.merge(filter: expected_filter))
+          end
+
+          context 'with a multi key-value Comparitor' do
+            let(:original_statement) { Statement.new('SELECT * FROM table WHERE (ck1, ck2) > (?, ?)', []) }
+            let(:args) { [11, 13] }
+
+            it 'should fill in all Comparitor parameters' do
+              expected_filter = {%W(ck1 ck2) => Statement::Comparitor.new(:gt, %w(ck1 ck2), [11, 13])}
+              expect(subject.args).to eq(original_statement.args.merge(filter: expected_filter))
+            end
           end
 
           context 'with a LIMIT specified' do
