@@ -687,11 +687,16 @@ module Cassandra
           before do
             statement.add(query, *query_args)
             allow(subject).to receive(:execute_async).and_call_original
+            allow(subject).to receive(:execute_async).with(query, *query_args).and_return(dummy_future)
           end
 
           it 'should execute all the underlying queries' do
             expect(subject).to receive(:execute_async).with(query, *query_args).and_return(dummy_future)
             subject.execute_async(statement)
+          end
+
+          it 'should return a ResultPage' do
+            expect(subject.execute_async(statement).get).to be_a_kind_of(ResultPage)
           end
 
           context 'with multiple statements in the batch' do

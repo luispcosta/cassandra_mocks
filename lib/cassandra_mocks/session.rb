@@ -29,7 +29,7 @@ module Cassandra
           futures = cql.statements.map do |batched_statement|
             execute_async(batched_statement.statement, *batched_statement.args)
           end
-          return Cassandra::Future.all(futures)
+          return Cassandra::Future.all(futures).then { ResultPage.new }
         end
 
         future = cql.is_a?(Statement) ? Cassandra::Future.value(cql.fill_params(args)) : prepare_async(cql)
