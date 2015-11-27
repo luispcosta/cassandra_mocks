@@ -17,7 +17,13 @@ module Cassandra
         end
 
         def check_against(row)
-          @comparitor.include?(row[column] <=> value)
+          if column.is_a?(Array)
+            row[column].each_with_index.all? do |row_value, index|
+              @comparitor.include?(row_value <=> value[index])
+            end
+          else
+            @comparitor.include?(row[column] <=> value)
+          end
         end
 
       end

@@ -8,10 +8,11 @@ module Cassandra
         let(:operation) { :lt }
         let(:column) { 'field1' }
         let(:value) { 'value1' }
+        let(:comparitor) { Comparitor.new(operation, column, value) }
 
-        subject { Comparitor.new(operation, column, value) }
+        subject { comparitor }
 
-        describe '#check' do
+        describe '#check_against' do
           let(:row) { {'field1' => 'value2', 'field2' => 'value0'} }
 
           it 'should be the result of the comparison' do
@@ -108,8 +109,55 @@ module Cassandra
             end
 
           end
-        end
 
+          context 'with a multi key-value comparison' do
+            let(:operation) { :gt }
+            let(:row_values) { [1, 1, 1] }
+            let(:row) { {%w(field1 field2 field3) => row_values} }
+            let(:column) { %w(field1 field2 field3) }
+            let(:value) { [1, 1, 1] }
+
+            subject { comparitor.check_against(row) }
+
+            it { is_expected.to eq(false) }
+
+            context 'with a >=' do
+              let(:operation) { :ge }
+              it { is_expected.to eq(true) }
+              context 'with a different row' do
+                let(:row_values) { [1, 1, 0] }
+                it { is_expected.to eq(false) }
+              end
+            end
+
+            context 'with a ==' do
+              let(:operation) { :eq }
+              it { is_expected.to eq(true) }
+              context 'with a different row' do
+                let(:row_values) { [1, 1, 0] }
+                it { is_expected.to eq(false) }
+              end
+            end
+
+            context 'with a <=' do
+              let(:operation) { :le }
+              it { is_expected.to eq(true) }
+              context 'with a different row' do
+                let(:row_values) { [1, 1, 2] }
+                it { is_expected.to eq(false) }
+              end
+            end
+
+            context 'with a <' do
+              let(:operation) { :lt }
+              it { is_expected.to eq(false) }
+              context 'with a different row' do
+                let(:row_values) { [1, 1, 2] }
+                it { is_expected.to eq(false) }
+              end
+            end
+          end
+        end
 
       end
     end
