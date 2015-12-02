@@ -14,7 +14,10 @@
 # limitations under the License.
 #++
 
+require 'cassandra'
+require 'active_support/all'
 require 'active_support/core_ext/class/attribute_accessors'
+
 require 'cassandra_mocks/result_page'
 require 'cassandra_mocks/table'
 require 'cassandra_mocks/statement/batch'
