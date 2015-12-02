@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     cassandra_mocks (0.0.8)
-      activesupport (>= 4.0)
+      activesupport (~> 4.0)
       cassandra-driver (~> 1.1)
 
 GEM
