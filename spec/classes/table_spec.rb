@@ -481,15 +481,32 @@ module Cassandra
                     {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1'},
                 ]
                 expect(subject.select('*', restriction: {'pk1' => 'partition 2',
-                                            'pk2' => 'additional partition 2',
-                                            'ck1' => 'clustering 1',
-                                            'ck2' => 'additional clustering 1'})).to eq(expected_results)
+                                                         'pk2' => 'additional partition 2',
+                                                         'ck1' => 'clustering 1',
+                                                         'ck2' => 'additional clustering 1'})).to eq(expected_results)
               end
             end
+
+            context 'when using multiple Comparitors with a single key' do
+              let(:list_of_attributes) do
+                [
+                    {'pk1' => 'part', 'pk2' => 'part', 'ck1' => 'a', 'ck2' => 'z'},
+                    {'pk1' => 'part', 'pk2' => 'part', 'ck1' => 'b', 'ck2' => 'z'},
+                    {'pk1' => 'part', 'pk2' => 'part', 'ck1' => 'c', 'ck2' => 'z'},
+                ]
+              end
+              let(:filter) do
+                {'pk1' => 'part', 'pk2' => 'part', 'ck1' => [Statement::Comparitor.new(:gt, 'ck1', 'a'), Statement::Comparitor.new(:lt, 'ck1', 'c')]}
+              end
+              let(:expected_results) { [{'pk1' => 'part', 'pk2' => 'part', 'ck1' => 'b', 'ck2' => 'z'}] }
+
+              it 'should return the row that lies in between the comparisons' do
+                expect(subject.select('*', restriction: filter)).to eq(expected_results)
+              end
+            end
+
           end
-
         end
-
       end
 
       describe '#delete' do

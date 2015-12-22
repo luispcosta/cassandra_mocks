@@ -150,7 +150,11 @@ module Cassandra
             if value.is_a?(Statement::Comparitor)
               value.check_against(partial_row)
             elsif value.is_a?(Array)
-              value.include?(partial_row[column])
+              if value.first.is_a?(Statement::Comparitor)
+                value.all? { |value| value.check_against(partial_row) }
+              else
+                value.include?(partial_row[column])
+              end
             else
               partial_row[column] == value
             end
