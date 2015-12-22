@@ -507,7 +507,7 @@ module Cassandra
             it 'should update the row with the specified values' do
               subject.execute_async(query).get
               expected_row = row.merge('ck1' => 'romance', 'field1' => 7)
-              expect(table.select('*', 'pk1' => 'books', 'ck1' => 'romance')).to eq([expected_row])
+              expect(table.select('*', restriction: {'pk1' => 'books', 'ck1' => 'romance'})).to eq([expected_row])
             end
           end
 

@@ -79,7 +79,7 @@ module Cassandra
 
       def select_query(statement)
         table = cluster.keyspace(keyspace_for_statement(statement)).table(statement.args[:table])
-        options = statement.args[:filter].merge(limit: statement.args[:limit], order: statement.args[:order])
+        options = {restriction: statement.args[:filter], limit: statement.args[:limit], order: statement.args[:order]}
         table.select(*statement.args[:columns], options)
       end
 
@@ -90,7 +90,7 @@ module Cassandra
 
       def update_query(statement)
         table = cluster.keyspace(keyspace_for_statement(statement)).table(statement.args[:table])
-        rows_to_update = table.select('*', statement.args[:filter])
+        rows_to_update = table.select('*', restriction: statement.args[:filter])
         rows_to_update = [statement.args[:filter].dup] if rows_to_update.empty?
         rows_to_update.each do |row|
           updated_row = updated_row(row, statement)

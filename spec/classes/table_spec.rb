@@ -340,14 +340,14 @@ module Cassandra
 
           context 'when the filter is empty' do
             it 'should treat it as having no filter' do
-              expect(subject.select('*', {})).to eq(subject.rows)
+              expect(subject.select('*', restriction: {})).to eq(subject.rows)
             end
           end
 
           describe 'filtering by partition key' do
             it 'should return all records for that partition' do
               expected_results = [{'pk1' => 'partition', 'pk2' => 'additional partition', 'ck1' => 'clustering', 'ck2' => 'additional clustering'}]
-              expect(subject.select('*', {'pk1' => 'partition', 'pk2' => 'additional partition'})).to eq(expected_results)
+              expect(subject.select('*', restriction: {'pk1' => 'partition', 'pk2' => 'additional partition'})).to eq(expected_results)
             end
 
             context 'with a different partition key' do
@@ -358,7 +358,7 @@ module Cassandra
                     {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 1'},
                     {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'},
                 ]
-                expect(subject.select('*', {'pk1' => 'partition 2', 'pk2' => 'additional partition 2'})).to eq(expected_results)
+                expect(subject.select('*', restriction: {'pk1' => 'partition 2', 'pk2' => 'additional partition 2'})).to eq(expected_results)
               end
             end
 
@@ -374,23 +374,23 @@ module Cassandra
                     {'pk1' => 'partition 2', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 1'},
                     {'pk1' => 'partition 2', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'},
                 ]
-                expect(subject.select('*', {'pk1' => 'partition 2', 'pk2' => ['additional partition 1', 'additional partition 3']})).to eq(expected_results)
+                expect(subject.select('*', restriction: {'pk1' => 'partition 2', 'pk2' => ['additional partition 1', 'additional partition 3']})).to eq(expected_results)
               end
             end
 
             it 'should raise an error if only specifying part of the partition key' do
-              expect { (subject.select('*', {'pk1' => 'partition'})) }.to raise_error(Cassandra::Errors::InvalidError, 'Missing partition key part(s) "pk2"')
+              expect { (subject.select('*', restriction: {'pk1' => 'partition'})) }.to raise_error(Cassandra::Errors::InvalidError, 'Missing partition key part(s) "pk2"')
             end
 
             context 'with a different part missing' do
               it 'should raise an error' do
-                expect { (subject.select('*', {'pk2' => 'additional partition'})) }.to raise_error(Cassandra::Errors::InvalidError, 'Missing partition key part(s) "pk1"')
+                expect { (subject.select('*', restriction: {'pk2' => 'additional partition'})) }.to raise_error(Cassandra::Errors::InvalidError, 'Missing partition key part(s) "pk1"')
               end
             end
 
             context 'with both parts missing' do
               it 'should raise an error' do
-                expect { (subject.select('*', {'ck1' => 'clustering'})) }.to raise_error(Cassandra::Errors::InvalidError, 'Missing partition key part(s) "pk1", "pk2"')
+                expect { (subject.select('*', restriction: {'ck1' => 'clustering'})) }.to raise_error(Cassandra::Errors::InvalidError, 'Missing partition key part(s) "pk1", "pk2"')
               end
             end
           end
@@ -401,7 +401,7 @@ module Cassandra
                   {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1'},
                   {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2'},
               ]
-              expect(subject.select('*', {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1'})).to eq(expected_results)
+              expect(subject.select('*', restriction: {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1'})).to eq(expected_results)
             end
 
             context 'with a comparitor' do
@@ -413,7 +413,7 @@ module Cassandra
                     {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'},
                 ]
                 comparitor = Statement::Comparitor.new(:ge, 'ck1', 'clustering 1')
-                expect(subject.select('*', {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => comparitor})).to eq(expected_results)
+                expect(subject.select('*', restriction: {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => comparitor})).to eq(expected_results)
               end
 
               context 'with a different comparison' do
@@ -423,7 +423,7 @@ module Cassandra
                       {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2'},
                   ]
                   comparitor = Statement::Comparitor.new(:lt, 'ck1', 'clustering 2')
-                  expect(subject.select('*', {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => comparitor})).to eq(expected_results)
+                  expect(subject.select('*', restriction: {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => comparitor})).to eq(expected_results)
                 end
               end
 
@@ -442,14 +442,14 @@ module Cassandra
                 end
 
                 it 'should return all records for that partition, matching the specified clustering columns' do
-                  expect(subject.select('*', restriction)).to eq(expected_results)
+                  expect(subject.select('*', restriction: restriction)).to eq(expected_results)
                 end
               end
             end
 
             it 'should raise an error if earlier clustering keys are not restricted' do
               expect do
-                subject.select('*', {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck2' => 'additional clustering 1'})
+                subject.select('*', restriction: {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck2' => 'additional clustering 1'})
               end.to raise_error(Cassandra::Errors::InvalidError, 'Clustering key part(s) "ck1" must be restricted')
             end
 
@@ -470,7 +470,7 @@ module Cassandra
 
               it 'should raise an error if earlier clustering keys are not restricted' do
                 expect do
-                  subject.select('*', {'pk1' => 'partition 2', 'cluster3' => 'additional clustering 1'})
+                  subject.select('*', restriction: {'pk1' => 'partition 2', 'cluster3' => 'additional clustering 1'})
                 end.to raise_error(Cassandra::Errors::InvalidError, 'Clustering key part(s) "cluster1", "cluster2" must be restricted')
               end
             end
@@ -480,7 +480,7 @@ module Cassandra
                 expected_results = [
                     {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1'},
                 ]
-                expect(subject.select('*', {'pk1' => 'partition 2',
+                expect(subject.select('*', restriction: {'pk1' => 'partition 2',
                                             'pk2' => 'additional partition 2',
                                             'ck1' => 'clustering 1',
                                             'ck2' => 'additional clustering 1'})).to eq(expected_results)

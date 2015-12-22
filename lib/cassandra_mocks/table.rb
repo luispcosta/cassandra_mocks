@@ -29,6 +29,7 @@ module Cassandra
         filter = select_filter(columns)
         limit = filter.delete(:limit)
         order = select_order(filter)
+        filter = filter.fetch(:restriction) { {} }
         unless filter.empty?
           validate_partion_key_filter!(filter)
           validate_clustering_column_filter!(filter)
@@ -48,7 +49,7 @@ module Cassandra
       end
 
       def delete(filter)
-        rows_to_remove = select('*', filter)
+        rows_to_remove = select('*', restriction: filter)
         @rows.reject! { |row| rows_to_remove.include?(row) }
       end
 
