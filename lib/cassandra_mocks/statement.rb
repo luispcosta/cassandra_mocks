@@ -88,7 +88,13 @@ module Cassandra
                               Comparitor.new(value.operation, value.column, pending_value(value.value, params))
                             end
                           elsif value.is_a?(Array)
-                            value.map { |value| pending_value(value, params) }
+                            value.map do |value|
+                              if value.is_a?(Comparitor)
+                                Comparitor.new(value.operation, value.column, pending_value(value.value, params))
+                              else
+                                pending_value(value, params)
+                              end
+                            end
                           else
                             pending_value(value, params)
                           end
@@ -325,7 +331,9 @@ module Cassandra
 
       def insert_args(insert_keys, insert_values)
         insert_keys.count.times.inject({}) do |memo, index|
+          key = insert_keys[index]
           value = mapped_value(insert_values[index])
+          value = [memo[key], value] if memo[key]
           memo.merge!(insert_keys[index] => value)
         end
       end

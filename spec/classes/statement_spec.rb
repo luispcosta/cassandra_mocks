@@ -297,6 +297,19 @@ module Cassandra
                     expect(statement.args).to include(filter: {%w(ck1 ck2) => Statement::Comparitor.new(:ge, %w(ck1 ck2), [5, :value_pending])})
                   end
                 end
+
+                context 'with the same key provided twice' do
+                  let(:result_comparitors) do
+                    {5 => :ge, 7 => :le}.map do |arg, op|
+                      Statement::Comparitor.new(op, 'ck1', arg)
+                    end
+                  end
+
+                  it 'should support multiple comparitors' do
+                    statement = Statement.new("#{keyword} FROM everything WHERE ck1 >= 5 AND ck1 <= 7", [])
+                    expect(statement.args).to include(filter: {'ck1' => result_comparitors})
+                  end
+                end
               end
 
               it 'should support parameterized restrictions' do
@@ -539,6 +552,22 @@ module Cassandra
 
             it 'should fill in all Comparitor parameters' do
               expected_filter = {%W(ck1 ck2) => Statement::Comparitor.new(:gt, %w(ck1 ck2), [11, 13])}
+              expect(subject.args).to eq(original_statement.args.merge(filter: expected_filter))
+            end
+          end
+
+          context 'with the same key provided twice' do
+            let(:original_statement) { Statement.new('SELECT FROM everything WHERE ck1 >= ? AND ck1 <= ?', []) }
+            let(:args) { [5, 7] }
+
+            let(:result_comparitors) do
+              {5 => :ge, 7 => :le}.map do |arg, op|
+                Statement::Comparitor.new(op, 'ck1', arg)
+              end
+            end
+
+            it 'should support multiple comparitors' do
+              expected_filter = {'ck1' => result_comparitors}
               expect(subject.args).to eq(original_statement.args.merge(filter: expected_filter))
             end
           end
