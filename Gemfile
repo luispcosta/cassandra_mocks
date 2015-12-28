@@ -4,7 +4,7 @@ gemspec
 
 group :development do
   gem 'rdoc'
-  gem 'cassandra-driver', '~> 1.1'
+  gem 'cassandra-driver', '~> 1.1', require: false
 end
 
 group :test do
