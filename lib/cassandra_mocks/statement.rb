@@ -135,7 +135,7 @@ module Cassandra
 
         next_token
         column_name = next_token.value
-        column_type = next_token.value
+        column_type = next_token.value.to_sym
         primary_key = nil
         if next_token.primary?
           primary_key = [[column_name]]
@@ -146,6 +146,7 @@ module Cassandra
                                {}
                              else
                                parenthesis_values(:rparen, :primary).each_slice(2).inject({}) do |memo, (name, type)|
+                                 type = type.to_sym if type
                                  memo.merge!(name => type)
                                end
                              end

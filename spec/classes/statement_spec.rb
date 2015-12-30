@@ -42,7 +42,7 @@ module Cassandra
 
             it 'should parse out the column definitions' do
               statement = Statement.new('CREATE TABLE table_name (pk1 text PRIMARY KEY)', [])
-              expect(statement.args).to include(columns: {'pk1' => 'text'})
+              expect(statement.args).to include(columns: {'pk1' => :text})
             end
 
             it 'should set the primary key' do
@@ -53,7 +53,7 @@ module Cassandra
             context 'with a different set of columns' do
               it 'should parse all column definitions' do
                 statement = Statement.new('CREATE TABLE products (type text PRIMARY KEY, section text)', [])
-                expect(statement.args).to include(columns: {'type' => 'text', 'section' => 'text'})
+                expect(statement.args).to include(columns: {'type' => :text, 'section' => :text})
               end
             end
 
