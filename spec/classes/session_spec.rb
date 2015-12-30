@@ -739,7 +739,7 @@ module Cassandra
       private
 
       def create_columns(columns)
-        columns.map { |key, value| Cassandra::Column.new(key, value, :asc) }
+        columns.map { |column, type| Cassandra::Column.new(column, type.to_sym, :asc) }
       end
 
     end
