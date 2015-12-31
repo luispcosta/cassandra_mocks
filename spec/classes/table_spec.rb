@@ -506,6 +506,16 @@ module Cassandra
             end
 
           end
+
+          describe 'filtering by fields' do
+            let(:filter) do
+              {'pk1' => 'part', 'pk2' => 'part', 'field1' => 'some value'}
+            end
+
+            it 'should raise an error indicating that this is not supported' do
+              expect { subject.select('*', restriction: filter) }.to raise_error(Cassandra::Errors::InvalidError, 'Filtering by fields is not supported')
+            end
+          end
         end
       end
 

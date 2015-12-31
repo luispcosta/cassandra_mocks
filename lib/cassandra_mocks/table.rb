@@ -33,6 +33,7 @@ module Cassandra
         unless filter.empty?
           validate_partion_key_filter!(filter)
           validate_clustering_column_filter!(filter)
+          raise_if_fields_restricted!(filter)
         end
 
         filtered_rows = filtered_rows(filter)
@@ -133,6 +134,11 @@ module Cassandra
           end
           filter_has_column?(filter, column)
         end
+      end
+
+      def raise_if_fields_restricted!(filter)
+        fields = column_names - (partition_key_names + clustering_key_names)
+        raise Cassandra::Errors::InvalidError.new('Filtering by fields is not supported', 'MockStatement') if fields.any? { |field| filter.keys.include?(field) }
       end
 
       def filter_has_column?(filter, column)
