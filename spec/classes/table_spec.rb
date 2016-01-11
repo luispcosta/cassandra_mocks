@@ -74,15 +74,16 @@ module Cassandra
             end
           end
 
+          it_behaves_like 'a column type validation', :double, Float, 'world', 54
           it_behaves_like 'a column type validation', 'double', Float, 'world', 54
-          it_behaves_like 'a column type validation', 'string', String, 5.0, 57
-          it_behaves_like 'a column type validation', 'text', String, 5.0, 57
-          it_behaves_like 'a column type validation', 'varchar', String, 5.0, 57
-          it_behaves_like 'a column type validation', 'int', Fixnum, 5.0, Cassandra::Uuid.new(SecureRandom.uuid)
-          it_behaves_like 'a column type validation', 'uuid', Cassandra::Uuid, SecureRandom.uuid, 55444
-          it_behaves_like 'a column type validation', 'timeuuid', Cassandra::TimeUuid, SecureRandom.uuid, 55444
-          it_behaves_like 'a column type validation', 'timestamp', Time, '10:30:55', 1000
-          it_behaves_like 'a column type validation', 'blob', String, 99, 5.0
+          it_behaves_like 'a column type validation', :string, String, 5.0, 57
+          it_behaves_like 'a column type validation', :text, String, 5.0, 57
+          it_behaves_like 'a column type validation', :varchar, String, 5.0, 57
+          it_behaves_like 'a column type validation', :int, Fixnum, 5.0, Cassandra::Uuid.new(SecureRandom.uuid)
+          it_behaves_like 'a column type validation', :uuid, Cassandra::Uuid, SecureRandom.uuid, 55444
+          it_behaves_like 'a column type validation', :timeuuid, Cassandra::TimeUuid, SecureRandom.uuid, 55444
+          it_behaves_like 'a column type validation', :timestamp, Time, '10:30:55', 1000
+          it_behaves_like 'a column type validation', :blob, String, 99, 5.0
         end
 
         context 'with multiple records' do

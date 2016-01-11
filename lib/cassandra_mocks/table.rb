@@ -88,24 +88,24 @@ module Cassandra
           end
 
           if value
-            case column.type
-              when 'double'
+            case column.type.to_sym
+              when :double
                 raise_unless_valid_type(column_name, Float, value)
-              when 'string'
+              when :string
                 raise_unless_valid_type(column_name, String, value)
-              when 'text'
+              when :text
                 raise_unless_valid_type(column_name, String, value)
-              when 'varchar'
+              when :varchar
                 raise_unless_valid_type(column_name, String, value)
-              when 'blob'
+              when :blob
                 raise_unless_valid_type(column_name, String, value)
-              when 'int'
+              when :int
                 raise_unless_valid_type(column_name, Fixnum, value)
-              when 'uuid'
+              when :uuid
                 raise_unless_valid_type(column_name, Cassandra::Uuid, value)
-              when 'timeuuid'
+              when :timeuuid
                 raise_unless_valid_type(column_name, Cassandra::TimeUuid, value)
-              when 'timestamp'
+              when :timestamp
                 raise_unless_valid_type(column_name, Time, value)
             end
           end
