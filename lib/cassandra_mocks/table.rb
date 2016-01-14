@@ -29,6 +29,17 @@ module Cassandra
         filter = select_filter(columns)
         limit = filter.delete(:limit)
         order = select_order(filter)
+
+        order_keys_in_partition = order.keys.select { |column| partition_key_names.include?(column) }
+        if order_keys_in_partition.any?
+          raise Cassandra::Errors::InvalidError.new("Order by is currently only supported on the clustered columns of the PRIMARY KEY, got #{order_keys_in_partition * ', '}", 'MockStatement')
+        end
+
+        missing_ordering_keys = order.keys.select { |column| !column_names.include?(column) }
+        if missing_ordering_keys.any?
+          raise Cassandra::Errors::InvalidError.new("Order by on unknown column(s) #{missing_ordering_keys * ', '}", 'MockStatement')
+        end
+
         filter = filter.fetch(:restriction) { {} }
         unless filter.empty?
           validate_partion_key_filter!(filter)

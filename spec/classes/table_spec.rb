@@ -292,6 +292,20 @@ module Cassandra
                 expect(subject.select('*', order: {'ck2' => :asc})).to eq(expected_results)
               end
             end
+
+            describe 'ordering by an invalid column' do
+              before do
+                subject.insert({'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 2'})
+              end
+
+              it 'should raise an error if ordering by a partition key column' do
+                expect { subject.select('*', order: {'pk1' => :asc}) }.to raise_error(Cassandra::Errors::InvalidError, 'Order by is currently only supported on the clustered columns of the PRIMARY KEY, got pk1')
+              end
+
+              it 'should raise an error if ordering by a non-existent column' do
+                expect { subject.select('*', order: {'ckkkkkk1' => :desc}) }.to raise_error(Cassandra::Errors::InvalidError, 'Order by on unknown column(s) ckkkkkk1')
+              end
+            end
           end
         end
 
