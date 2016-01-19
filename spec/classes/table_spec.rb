@@ -28,6 +28,18 @@ module Cassandra
 
       it { is_expected.to eq(super_table) }
 
+      context 'when mixing counter fields with non counter fields in the table' do
+        let(:field_name_one) { Faker::Lorem.word }
+        let(:fields_part_one) { Cassandra::Column.new(field_name_one, 'counter', :asc) }
+        let(:field_name_two) { Faker::Lorem.word }
+        let(:fields_part_two) { Cassandra::Column.new(field_name_two, 'int', :asc) }
+        let(:fields) { [fields_part_one, fields_part_two] }
+
+        it 'should not allow this' do
+          expect { subject }.to raise_error(Cassandra::Errors::ConfigurationError, "Cannot add counter column '#{field_name_one}' to non-counter column family")
+        end
+      end
+
       context 'with a different table configuration' do
         let(:name) { 'broken table' }
         let(:partition_key) { [pk_part_one, pk_part_two] }

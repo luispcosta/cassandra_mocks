@@ -5,6 +5,14 @@ module Cassandra
         compaction = Cassandra::Table::Compaction.new('mock', {})
         options = Cassandra::Table::Options.new({}, compaction, {}, false, 'mock')
         column_map = column_map(partition_key, clustering_key, fields)
+
+        counter_column = fields.find { |field| field.type.to_sym == :counter }
+        has_non_counters = !!fields.find { |field| field.type.to_sym != :counter }
+
+        if counter_column && has_non_counters
+          raise Cassandra::Errors::ConfigurationError.new("Cannot add counter column '#{counter_column.name}' to non-counter column family", 'MockStatement')
+        end
+
         super(keyspace, name, partition_key, clustering_key, column_map, options, [])
       end
 
