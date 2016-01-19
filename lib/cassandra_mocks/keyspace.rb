@@ -29,7 +29,7 @@ module Cassandra
       end
 
       def fields(columns, partition_key, primary_key)
-        columns.except(partition_key + primary_key).map { |name, type| Cassandra::Column.new(name, type, :asc) }
+        columns.except(*(partition_key + primary_key)).map { |name, type| Cassandra::Column.new(name, type, :asc) }
       end
 
     end

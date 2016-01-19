@@ -124,6 +124,14 @@ module Cassandra
             expect(table).to eq(expected_table)
           end
 
+          describe 'creating counter tables' do
+            let(:query) { "CREATE TABLE #{table_name} (pk1 text, ck1 text, field1 counter, PRIMARY KEY(pk1, ck1))" }
+
+            it 'should not include the primary key as part of the fields' do
+              expect { subject.execute_async(query).get }.not_to raise_error
+            end
+          end
+
           context 'with a different keyspace' do
             let(:keyspace) { 'development' }
 
