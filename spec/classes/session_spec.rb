@@ -479,7 +479,7 @@ module Cassandra
 
         context 'with an UPDATE query' do
           let(:primary_key) { [['pk1'], 'ck1'] }
-          let(:columns) { {'pk1' => 'text', 'ck1' => 'text', 'field1' => 'counter'} }
+          let(:columns) { {'pk1' => 'text', 'ck1' => 'text', 'field1' => 'int'} }
           let(:keyspace) { 'development' }
           let(:table_keyspace) { keyspace }
           let(:table_name) { 'books' }
@@ -554,7 +554,7 @@ module Cassandra
           end
 
           context 'with different fields' do
-            let(:columns) { {'pk1' => 'text', 'ck1' => 'text', 'book_count' => 'counter'} }
+            let(:columns) { {'pk1' => 'text', 'ck1' => 'text', 'book_count' => 'int'} }
             let(:row) { {'pk1' => 'books', 'ck1' => 'mystery', 'book_count' => 51234} }
             let(:query) { "UPDATE #{table_name} SET book_count = 70101 WHERE pk1 = 'books' AND ck1 = 'mystery'" }
 
@@ -593,7 +593,7 @@ module Cassandra
 
         context 'with a DELETE query' do
           let(:primary_key) { [['pk1'], 'ck1'] }
-          let(:columns) { {'pk1' => 'text', 'ck1' => 'text', 'field1' => 'counter'} }
+          let(:columns) { {'pk1' => 'text', 'ck1' => 'text', 'field1' => 'int'} }
           let(:keyspace) { 'development' }
           let(:table_keyspace) { keyspace }
           let(:table_name) { 'books' }
