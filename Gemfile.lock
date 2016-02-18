@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    cassandra_mocks (0.0.15)
+    cassandra_mocks (0.0.16)
       activesupport (~> 4.0)
       cassandra-driver (~> 1.1)
 
@@ -98,7 +98,6 @@ GEM
       ffi
     thor (0.19.1)
     thread_safe (0.3.5)
-    thread_safe (0.3.5-java)
     timecop (0.8.0)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
@@ -122,4 +121,4 @@ DEPENDENCIES
   timecop
 
 BUNDLED WITH
-   1.10.6
+   1.11.2

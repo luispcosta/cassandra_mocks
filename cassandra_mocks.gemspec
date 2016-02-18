@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'cassandra_mocks'
-  s.version = '0.0.15'
+  s.version = '0.0.16'
   s.license = 'Apache License 2.0'
   s.summary = 'Cassandra mocking framework'
   s.description = %q{Cassandra mocking framework intended to replace having
