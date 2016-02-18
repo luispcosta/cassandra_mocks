@@ -301,7 +301,7 @@ module Cassandra
                     {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 2'},
                     {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 3'},
                 ]
-                expect(subject.select('*', order: {'ck1' => :desc, 'ck2' => :asc})).to eq(expected_results)
+                expect(subject.select('*', order: {'ck1' => :asc, 'ck2' => :asc})).to eq(expected_results)
               end
             end
 
@@ -327,6 +327,12 @@ module Cassandra
 
                 it 'should raise an error when in the wrong order' do
                   expect { subject.select('*', order: {'ck2' => :asc, 'ck1' => :asc}) }.to raise_error(Cassandra::Errors::InvalidError, 'Order by currently only support the ordering of columns following their declared order in the PRIMARY KEY (expected ck1, ck2 got ck2, ck1)')
+                end
+              end
+
+              context 'with inconsistent ordering directions' do
+                it 'should raise an error' do
+                  expect { subject.select('*', order: {'ck1' => :asc, 'ck2' => :desc}) }.to raise_error(Cassandra::Errors::InvalidError, 'Ordering direction must be consistent across all clustering columns')
                 end
               end
             end
