@@ -291,7 +291,7 @@ module Cassandra
                   {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 3'},
                   {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 2'},
               ]
-              expect(subject.select('*', order: {'ck2' => :desc})).to eq(expected_results)
+              expect(subject.select('*', order: {'ck1' => :desc, 'ck2' => :desc})).to eq(expected_results)
             end
 
             context 'with a different ordering' do
@@ -301,23 +301,36 @@ module Cassandra
                     {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 2'},
                     {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 3'},
                 ]
-                expect(subject.select('*', order: {'ck2' => :asc})).to eq(expected_results)
+                expect(subject.select('*', order: {'ck1' => :desc, 'ck2' => :asc})).to eq(expected_results)
               end
             end
 
-            describe 'ordering by an invalid column' do
+            describe 'an invalid ordering clause' do
               before do
                 subject.insert({'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 2'})
               end
 
-              it 'should raise an error if ordering by a partition key column' do
-                expect { subject.select('*', order: {'pk1' => :asc}) }.to raise_error(Cassandra::Errors::InvalidError, 'Order by is currently only supported on the clustered columns of the PRIMARY KEY, got pk1')
+              describe 'ordering by an invalid column' do
+                it 'should raise an error if ordering by a partition key column' do
+                  expect { subject.select('*', order: {'pk1' => :asc}) }.to raise_error(Cassandra::Errors::InvalidError, 'Order by is currently only supported on the clustered columns of the PRIMARY KEY, got pk1')
+                end
+
+                it 'should raise an error if ordering by a non-existent column' do
+                  expect { subject.select('*', order: {'ckkkkkk1' => :desc}) }.to raise_error(Cassandra::Errors::InvalidError, 'Order by on unknown column(s) ckkkkkk1')
+                end
               end
 
-              it 'should raise an error if ordering by a non-existent column' do
-                expect { subject.select('*', order: {'ckkkkkk1' => :desc}) }.to raise_error(Cassandra::Errors::InvalidError, 'Order by on unknown column(s) ckkkkkk1')
+              context 'when columns are provided in the wrong order' do
+                it 'should raise an error when missing part of the ordering key' do
+                  expect { subject.select('*', order: {'ck2' => :asc}) }.to raise_error(Cassandra::Errors::InvalidError, 'Order by currently only support the ordering of columns following their declared order in the PRIMARY KEY (expected ck1, ck2 got ck2)')
+                end
+
+                it 'should raise an error when in the wrong order' do
+                  expect { subject.select('*', order: {'ck2' => :asc, 'ck1' => :asc}) }.to raise_error(Cassandra::Errors::InvalidError, 'Order by currently only support the ordering of columns following their declared order in the PRIMARY KEY (expected ck1, ck2 got ck2, ck1)')
+                end
               end
             end
+
           end
         end
 

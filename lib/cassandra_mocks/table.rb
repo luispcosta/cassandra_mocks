@@ -48,6 +48,11 @@ module Cassandra
           raise Cassandra::Errors::InvalidError.new("Order by on unknown column(s) #{missing_ordering_keys * ', '}", 'MockStatement')
         end
 
+        out_of_order = !order.empty? && order.keys.each.with_index.any? { |column, index| clustering_key_names[index] != column }
+        if out_of_order
+          raise Cassandra::Errors::InvalidError.new("Order by currently only support the ordering of columns following their declared order in the PRIMARY KEY (expected #{clustering_key_names * ', '} got #{order.keys * ', '})", 'MockStatement')
+        end
+
         filter = filter.fetch(:restriction) { {} }
         unless filter.empty?
           validate_partion_key_filter!(filter)
