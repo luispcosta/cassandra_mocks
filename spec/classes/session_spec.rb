@@ -477,6 +477,12 @@ module Cassandra
               let(:statement) { subject.prepare(query) }
 
               it 'should run the pre-parsed query with the filled in parameters' do
+                results = subject.execute_async(statement, arguments: ['other partition', 'clustering']).get
+                expected_row = {'pk1' => 'other partition', 'ck1' => 'clustering', 'field1' => 'extra data'}
+                expect(results).to eq([expected_row])
+              end
+
+              it 'should support splat args' do
                 results = subject.execute_async(statement, 'other partition', 'clustering').get
                 expected_row = {'pk1' => 'other partition', 'ck1' => 'clustering', 'field1' => 'extra data'}
                 expect(results).to eq([expected_row])
@@ -693,13 +699,13 @@ module Cassandra
           let(:statement) { Cassandra::Statements::Batch.new }
 
           before do
-            statement.add(query, *query_args)
+            statement.add(query, arguments: query_args)
             allow(subject).to receive(:execute_async).and_call_original
-            allow(subject).to receive(:execute_async).with(query, *query_args).and_return(dummy_future)
+            allow(subject).to receive(:execute_async).with(query, arguments: query_args).and_return(dummy_future)
           end
 
           it 'should execute all the underlying queries' do
-            expect(subject).to receive(:execute_async).with(query, *query_args).and_return(dummy_future)
+            expect(subject).to receive(:execute_async).with(query, arguments: query_args).and_return(dummy_future)
             subject.execute_async(statement)
           end
 
@@ -713,11 +719,11 @@ module Cassandra
             let(:query_two_args) { %w(ghi jkl) }
 
             before do
-              statement.add(query_two_statement, *query_two_args)
+              statement.add(query_two_statement, arguments: query_two_args)
             end
 
             it 'should execute all the underlying queries' do
-              expect(subject).to receive(:execute_async).with(query_two_statement, *query_two_args).and_return(dummy_future)
+              expect(subject).to receive(:execute_async).with(query_two_statement, arguments: query_two_args).and_return(dummy_future)
               subject.execute_async(statement)
             end
           end

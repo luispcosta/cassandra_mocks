@@ -25,6 +25,9 @@ module Cassandra
       end
 
       def execute_async(cql, *args)
+        options = fetch_options(args)
+        args = options.fetch(:arguments) { args }
+
         if cql.is_a?(Cassandra::Statements::Batch)
           futures = cql.statements.map do |batched_statement|
             execute_async(batched_statement.statement, *batched_statement.args)
@@ -35,6 +38,7 @@ module Cassandra
         future = cql.is_a?(Statement) ? Cassandra::Future.value(cql.fill_params(args)) : prepare_async(cql)
         future.then do |statement|
           result = ResultPage.new
+          # noinspection RubyCaseWithoutElseBlockInspection
           case statement.action
             when :create_keyspace
               cluster.add_keyspace(statement.args[:keyspace])
@@ -70,6 +74,14 @@ module Cassandra
       end
 
       private
+
+      def fetch_options(args)
+        if args.last.is_a?(Hash)
+          args.pop
+        else
+          {arguments: args}
+        end
+      end
 
       def insert_query(result, statement)
         check_exists = !!statement.args[:check_exists]
