@@ -16,7 +16,7 @@ module Cassandra
             parse_create_table
           else
             @action = :create_keyspace
-            @args = {keyspace: next_token.value}
+            parse_create_keyspace
           end
         elsif type_token.truncate?
           parse_truncate_query
@@ -122,6 +122,16 @@ module Cassandra
         else
           @last_token = tokens.pop
         end
+      end
+
+      def parse_create_keyspace
+        keyspace_name_token = next_token
+        check_exists = if keyspace_name_token.if?
+                         next_token
+                         next_token
+                         keyspace_name_token = next_token
+                       end
+        @args = {keyspace: keyspace_name_token.value, check_exists: !!check_exists}
       end
 
       def parse_create_table

@@ -87,13 +87,20 @@ module Cassandra
 
             it 'should parse out the keyspace name' do
               statement = Statement.new("CREATE KEYSPACE keyspace_name WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 }", [])
-              expect(statement.args).to include(keyspace: 'keyspace_name')
+              expect(statement.args).to include(keyspace: 'keyspace_name', check_exists: false)
             end
 
             context 'with a different keyspace' do
               it 'should parse out the keyspace name' do
                 statement = Statement.new("CREATE KEYSPACE production_keyspace WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 }", [])
                 expect(statement.args).to include(keyspace: 'production_keyspace')
+              end
+            end
+
+            describe 'checking for the existence of a keyspace' do
+              it 'should check if the keyspace exists before trying to create it' do
+                statement = Statement.new("CREATE KEYSPACE IF NOT EXISTS keyspace_name WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 }", [])
+                expect(statement.args).to include(keyspace: 'keyspace_name', check_exists: true)
               end
             end
           end
