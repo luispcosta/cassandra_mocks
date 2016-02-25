@@ -43,7 +43,7 @@ module Cassandra
             when :create_keyspace
               cluster.add_keyspace(statement.args[:keyspace])
             when :create_table
-              cluster.keyspace(keyspace).add_table(statement.args[:table], statement.args[:primary_key], statement.args[:columns])
+              cluster.keyspace(keyspace).add_table(statement.args[:table], statement.args[:primary_key], statement.args[:columns], statement.args[:check_exists])
             when :insert
               insert_query(result, statement)
             when :update

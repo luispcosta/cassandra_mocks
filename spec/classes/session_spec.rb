@@ -124,6 +124,15 @@ module Cassandra
             expect(table).to eq(expected_table)
           end
 
+          describe 'a IF NOT EXISTS query' do
+            let(:query) { "CREATE TABLE IF NOT EXISTS #{table_name} (pk1 text, ck1 text, field1 text, PRIMARY KEY(pk1, ck1))" }
+            before { subject.execute_async(query).get }
+
+            it 'should not raise an error' do
+              expect { subject.execute_async(query).get }.not_to raise_error
+            end
+          end
+
           describe 'creating counter tables' do
             let(:query) { "CREATE TABLE #{table_name} (pk1 text, ck1 text, field1 counter, PRIMARY KEY(pk1, ck1))" }
 
@@ -193,7 +202,7 @@ module Cassandra
           let!(:table) do
             cluster.add_keyspace(keyspace)
             cluster.add_keyspace(table_keyspace) unless cluster.keyspace(table_keyspace)
-            cluster.keyspace(table_keyspace).tap { |ks| ks.add_table(table_name, primary_key, columns) }.table(table_name)
+            cluster.keyspace(table_keyspace).tap { |ks| ks.add_table(table_name, primary_key, columns, false) }.table(table_name)
           end
           let(:primary_key) { [['section'], 'genre'] }
           let(:columns) { {'section' => 'text', 'genre' => 'text', 'description' => 'text'} }
@@ -273,7 +282,7 @@ module Cassandra
             cluster.add_keyspace(keyspace)
             cluster.add_keyspace(table_keyspace) unless cluster.keyspace(table_keyspace)
             cluster.keyspace(table_keyspace).tap do |ks|
-              ks.add_table(table_name, [['pk1'], 'ck1'], {'pk1' => 'text', 'ck1' => 'text'})
+              ks.add_table(table_name, [['pk1'], 'ck1'], {'pk1' => 'text', 'ck1' => 'text'}, false)
             end.table(table_name)
           end
 
@@ -333,7 +342,7 @@ module Cassandra
             cluster.add_keyspace(keyspace)
             cluster.add_keyspace(table_keyspace) unless cluster.keyspace(table_keyspace)
             cluster.keyspace(table_keyspace).tap do |ks|
-              ks.add_table(table_name, [['pk1'], 'ck1'], {'pk1' => 'text', 'ck1' => 'text'})
+              ks.add_table(table_name, [['pk1'], 'ck1'], {'pk1' => 'text', 'ck1' => 'text'}, false)
             end.table(table_name)
           end
           let(:query) { "DROP TABLE #{table_name}" }
@@ -376,7 +385,7 @@ module Cassandra
             cluster.add_keyspace(keyspace)
             cluster.add_keyspace(table_keyspace) unless cluster.keyspace(table_keyspace)
             cluster.keyspace(table_keyspace).tap do |ks|
-              ks.add_table(table_name, primary_key, columns)
+              ks.add_table(table_name, primary_key, columns, false)
             end.table(table_name)
           end
           let(:rows) do
@@ -501,7 +510,7 @@ module Cassandra
             cluster.add_keyspace(keyspace)
             cluster.add_keyspace(table_keyspace) unless cluster.keyspace(table_keyspace)
             cluster.keyspace(table_keyspace).tap do |ks|
-              ks.add_table(table_name, primary_key, columns)
+              ks.add_table(table_name, primary_key, columns, false)
             end.table(table_name)
           end
           let(:row) { {'pk1' => 'books', 'ck1' => 'mystery', 'field1' => 5} }
@@ -615,7 +624,7 @@ module Cassandra
             cluster.add_keyspace(keyspace)
             cluster.add_keyspace(table_keyspace) unless cluster.keyspace(table_keyspace)
             cluster.keyspace(table_keyspace).tap do |ks|
-              ks.add_table(table_name, primary_key, columns)
+              ks.add_table(table_name, primary_key, columns, false)
             end.table(table_name)
           end
           let(:row) { {'pk1' => 'books', 'ck1' => 'mystery', 'field1' => 5} }

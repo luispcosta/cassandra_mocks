@@ -25,12 +25,13 @@ module Cassandra
         let(:fields) { {'field1' => 'double'} }
         let(:primary_key) { [partition_key.keys, *clustering_columns.keys] }
         let(:table_name) { 'generic_table' }
+        let(:ignore_existing) { false }
         let(:table) do
           Cassandra::Mocks::Table.new(name, table_name, create_columns(partition_key), create_columns(clustering_columns), create_columns(fields))
         end
 
         it 'should create a table using the specified parameters' do
-          subject.add_table(table_name, primary_key, columns)
+          subject.add_table(table_name, primary_key, columns, ignore_existing)
           expect(subject.table(table_name)).to eq(table)
         end
 
@@ -38,14 +39,23 @@ module Cassandra
           let(:table_name) { 'supercalafragalisticexpialadoshiosomobobbydobbydoo-1234567890-table' }
 
           it 'should raise an error indicating the table name is too long' do
-            expect { subject.add_table(table_name, primary_key, columns) }.to raise_error(Errors::InvalidError, "Table name '#{table_name}' cannot be greater than 48 characters")
+            expect { subject.add_table(table_name, primary_key, columns, ignore_existing) }.to raise_error(Errors::InvalidError, "Table name '#{table_name}' cannot be greater than 48 characters")
           end
         end
 
-        context 'when the keyspace already exists' do
+        context 'when the table already exists' do
           it 'should raise an error' do
-            subject.add_table(table_name, primary_key, columns)
-            expect { subject.add_table(table_name, primary_key, columns) }.to raise_error(Errors::AlreadyExistsError, 'Cannot create already existing table')
+            subject.add_table(table_name, primary_key, columns, ignore_existing)
+            expect { subject.add_table(table_name, primary_key, columns, ignore_existing) }.to raise_error(Errors::AlreadyExistsError, 'Cannot create already existing table')
+          end
+
+          context 'when we do not care' do
+            let(:ignore_existing) { true }
+
+            it 'should not raise an error' do
+              subject.add_table(table_name, primary_key, columns, ignore_existing)
+              expect { subject.add_table(table_name, primary_key, columns, ignore_existing) }.not_to raise_error
+            end
           end
         end
 
@@ -53,7 +63,7 @@ module Cassandra
           let(:name) { 'production_keys' }
 
           it 'should create a table using the specified parameters' do
-            subject.add_table(table_name, primary_key, columns)
+            subject.add_table(table_name, primary_key, columns, ignore_existing)
             expect(subject.table(table_name)).to eq(table)
           end
         end
@@ -62,7 +72,7 @@ module Cassandra
           let(:table_name) { 'books' }
 
           it 'should create a table using the specified parameters' do
-            subject.add_table(table_name, primary_key, columns)
+            subject.add_table(table_name, primary_key, columns, ignore_existing)
             expect(subject.table(table_name)).to eq(table)
           end
         end
@@ -72,7 +82,7 @@ module Cassandra
           let(:partition_key) { {'genre' => 'text', 'style' => 'text'} }
 
           it 'should create a table using the specified parameters' do
-            subject.add_table(table_name, primary_key, columns)
+            subject.add_table(table_name, primary_key, columns, ignore_existing)
             expect(subject.table(table_name).to_cql).to eq(table.to_cql)
           end
         end
@@ -82,7 +92,7 @@ module Cassandra
           let(:clustering_columns) { {'district' => 'text', 'location_number' => 'int'} }
 
           it 'should create a table using the specified parameters' do
-            subject.add_table(table_name, primary_key, columns)
+            subject.add_table(table_name, primary_key, columns, ignore_existing)
             expect(subject.table(table_name).to_cql).to eq(table.to_cql)
           end
         end
@@ -92,7 +102,7 @@ module Cassandra
           let(:fields) { {'green field' => 'double', 'blue field' => 'int'} }
 
           it 'should create a table using the specified parameters' do
-            subject.add_table(table_name, primary_key, columns)
+            subject.add_table(table_name, primary_key, columns, ignore_existing)
             expect(subject.table(table_name).to_cql).to eq(table.to_cql)
           end
         end
@@ -101,7 +111,7 @@ module Cassandra
       describe '#drop_table' do
         let(:table_name) { 'table' }
 
-        before { subject.add_table(table_name, [['pk1'], 'ck1'], {'pk1' => 'text', 'ck1' => 'text'}) }
+        before { subject.add_table(table_name, [['pk1'], 'ck1'], {'pk1' => 'text', 'ck1' => 'text'}, false) }
 
         it 'should remove the table' do
           subject.drop_table('table')
