@@ -73,22 +73,33 @@ module Cassandra
       end
 
       describe '#add_keyspace' do
+        let(:ignore_existing) { false }
+
         it 'should add a keyspace with the specified name' do
-          subject.add_keyspace('keyspace')
+          subject.add_keyspace('keyspace', ignore_existing)
           expect(subject.keyspace('keyspace')).to eq(Keyspace.new('keyspace'))
         end
 
         context 'with a different keyspace name' do
           it 'should add a keyspace with the specified name' do
-            subject.add_keyspace('other_keyspace')
+            subject.add_keyspace('other_keyspace', ignore_existing)
             expect(subject.keyspace('other_keyspace')).to eq(Keyspace.new('other_keyspace'))
           end
         end
 
         context 'when the keyspace already exists' do
+          before { subject.add_keyspace('other_keyspace', ignore_existing) }
+
           it 'should raise an error' do
-            subject.add_keyspace('other_keyspace')
-            expect{subject.add_keyspace('other_keyspace')}.to raise_error(Errors::AlreadyExistsError, 'Cannot create already existing keyspace')
+            expect { subject.add_keyspace('other_keyspace', ignore_existing) }.to raise_error(Errors::AlreadyExistsError, 'Cannot create already existing keyspace')
+          end
+
+          context 'when we do not care' do
+            let(:ignore_existing) { true }
+
+            it 'should not raise an error' do
+              expect { subject.add_keyspace('other_keyspace', ignore_existing) }.not_to raise_error
+            end
           end
         end
       end
@@ -96,7 +107,7 @@ module Cassandra
       describe '#drop_keyspace' do
         let(:keyspace) { 'keyspace' }
 
-        before { subject.add_keyspace(keyspace) }
+        before { subject.add_keyspace(keyspace, false) }
 
         it 'should remove a keyspace with the specified name' do
           subject.drop_keyspace('keyspace')
@@ -116,7 +127,7 @@ module Cassandra
       describe '#each_keyspace' do
         let(:keyspaces) { %w(ks1 ks2) }
 
-        before { keyspaces.each { |ks| subject.add_keyspace(ks) } }
+        before { keyspaces.each { |ks| subject.add_keyspace(ks, false) } }
 
         it 'should iterate over all keyspaces' do
           expect(subject.each_keyspace.map { |ks| ks }).to eq([Keyspace.new('ks1'), Keyspace.new('ks2')])

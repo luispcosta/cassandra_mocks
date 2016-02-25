@@ -94,6 +94,15 @@ module Cassandra
             expect(cluster.keyspace('keyspace_name')).to eq(Keyspace.new('keyspace_name'))
           end
 
+          describe 'a IF NOT EXISTS query' do
+            let(:query) { "CREATE KEYSPACE IF NOT EXISTS keyspace_name WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 }" }
+            before { subject.execute_async(query).get }
+
+            it 'should not raise an error' do
+              expect { subject.execute_async(query).get }.not_to raise_error
+            end
+          end
+
           context 'with a different keyspace' do
             let(:query) { "CREATE KEYSPACE development WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 }" }
 
@@ -116,7 +125,7 @@ module Cassandra
             Table.new(keyspace, table_name, create_columns(partition_key), create_columns(clustering_columns), create_columns(fields))
           end
 
-          before { cluster.add_keyspace(keyspace) }
+          before { cluster.add_keyspace(keyspace, false) }
 
           it 'should create the table with the specified params' do
             subject.execute_async(query).get
@@ -200,8 +209,8 @@ module Cassandra
           let(:table_keyspace) { keyspace }
           let(:table_name) { 'books' }
           let!(:table) do
-            cluster.add_keyspace(keyspace)
-            cluster.add_keyspace(table_keyspace) unless cluster.keyspace(table_keyspace)
+            cluster.add_keyspace(keyspace, false)
+            cluster.add_keyspace(table_keyspace, true)
             cluster.keyspace(table_keyspace).tap { |ks| ks.add_table(table_name, primary_key, columns, false) }.table(table_name)
           end
           let(:primary_key) { [['section'], 'genre'] }
@@ -279,8 +288,8 @@ module Cassandra
           let(:table_keyspace) { keyspace }
           let(:table_name) { 'books' }
           let!(:table) do
-            cluster.add_keyspace(keyspace)
-            cluster.add_keyspace(table_keyspace) unless cluster.keyspace(table_keyspace)
+            cluster.add_keyspace(keyspace, false)
+            cluster.add_keyspace(table_keyspace, true)
             cluster.keyspace(table_keyspace).tap do |ks|
               ks.add_table(table_name, [['pk1'], 'ck1'], {'pk1' => 'text', 'ck1' => 'text'}, false)
             end.table(table_name)
@@ -317,7 +326,7 @@ module Cassandra
           let(:keyspace) { 'keys' }
           let(:query) { "DROP KEYSPACE #{keyspace}" }
 
-          before { cluster.add_keyspace(keyspace) }
+          before { cluster.add_keyspace(keyspace, false) }
 
           it 'should delete the keyspace' do
             subject.execute_async(query).get
@@ -339,8 +348,8 @@ module Cassandra
           let(:table_keyspace) { keyspace }
           let(:table_name) { 'table' }
           let!(:table) do
-            cluster.add_keyspace(keyspace)
-            cluster.add_keyspace(table_keyspace) unless cluster.keyspace(table_keyspace)
+            cluster.add_keyspace(keyspace, false)
+            cluster.add_keyspace(table_keyspace, true)
             cluster.keyspace(table_keyspace).tap do |ks|
               ks.add_table(table_name, [['pk1'], 'ck1'], {'pk1' => 'text', 'ck1' => 'text'}, false)
             end.table(table_name)
@@ -382,8 +391,8 @@ module Cassandra
           let(:table_keyspace) { keyspace }
           let(:table_name) { 'books' }
           let!(:table) do
-            cluster.add_keyspace(keyspace)
-            cluster.add_keyspace(table_keyspace) unless cluster.keyspace(table_keyspace)
+            cluster.add_keyspace(keyspace, false)
+            cluster.add_keyspace(table_keyspace, true)
             cluster.keyspace(table_keyspace).tap do |ks|
               ks.add_table(table_name, primary_key, columns, false)
             end.table(table_name)
@@ -507,8 +516,8 @@ module Cassandra
           let(:table_keyspace) { keyspace }
           let(:table_name) { 'books' }
           let!(:table) do
-            cluster.add_keyspace(keyspace)
-            cluster.add_keyspace(table_keyspace) unless cluster.keyspace(table_keyspace)
+            cluster.add_keyspace(keyspace, false)
+            cluster.add_keyspace(table_keyspace, true)
             cluster.keyspace(table_keyspace).tap do |ks|
               ks.add_table(table_name, primary_key, columns, false)
             end.table(table_name)
@@ -621,8 +630,8 @@ module Cassandra
           let(:table_keyspace) { keyspace }
           let(:table_name) { 'books' }
           let!(:table) do
-            cluster.add_keyspace(keyspace)
-            cluster.add_keyspace(table_keyspace) unless cluster.keyspace(table_keyspace)
+            cluster.add_keyspace(keyspace, false)
+            cluster.add_keyspace(table_keyspace, true)
             cluster.keyspace(table_keyspace).tap do |ks|
               ks.add_table(table_name, primary_key, columns, false)
             end.table(table_name)

@@ -41,7 +41,7 @@ module Cassandra
           # noinspection RubyCaseWithoutElseBlockInspection
           case statement.action
             when :create_keyspace
-              cluster.add_keyspace(statement.args[:keyspace])
+              cluster.add_keyspace(statement.args[:keyspace], statement.args[:check_exists])
             when :create_table
               cluster.keyspace(keyspace).add_table(statement.args[:table], statement.args[:primary_key], statement.args[:columns], statement.args[:check_exists])
             when :insert

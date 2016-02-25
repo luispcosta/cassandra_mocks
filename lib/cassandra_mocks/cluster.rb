@@ -26,8 +26,11 @@ module Cassandra
         connect_async(keyspace).get
       end
 
-      def add_keyspace(name)
-        raise Errors::AlreadyExistsError.new('Cannot create already existing keyspace', 'MockStatement', name, nil) if @keyspaces[name]
+      def add_keyspace(name, ignore_existing)
+        if @keyspaces[name]
+          return if ignore_existing
+          raise Errors::AlreadyExistsError.new('Cannot create already existing keyspace', 'MockStatement', name, nil)
+        end
         @keyspaces[name] = Keyspace.new(name)
       end
 
