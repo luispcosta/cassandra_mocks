@@ -89,6 +89,11 @@ module Cassandra
         describe 'with a CREATE KEYSPACE query' do
           let(:query) { "CREATE KEYSPACE keyspace_name WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 }" }
 
+          before do
+            # hack to to compare empty tables
+            allow(Concurrent::Map).to receive(:new).and_return({})
+          end
+
           it 'should create the keyspace' do
             subject.execute_async(query).get
             expect(cluster.keyspace('keyspace_name')).to eq(Keyspace.new('keyspace_name'))
@@ -703,6 +708,11 @@ module Cassandra
         context 'when the query is a statement' do
           let(:query) { "CREATE KEYSPACE keyspace_name WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 }" }
           let(:statement) { subject.prepare(query) }
+
+          before do
+            # hack to to compare empty tables
+            allow(Concurrent::Map).to receive(:new).and_return({})
+          end
 
           it 'should run the pre-parsed query' do
             subject.execute_async(statement).get
