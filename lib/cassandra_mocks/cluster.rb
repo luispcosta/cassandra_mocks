@@ -6,7 +6,7 @@ module Cassandra
       def_delegator :@keyspaces, :[], :keyspace
 
       def initialize
-        @keyspaces = {}
+        @keyspaces = Concurrent::Map.new
       end
 
       def connect_async(keyspace = nil)

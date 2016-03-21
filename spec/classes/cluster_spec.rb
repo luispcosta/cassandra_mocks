@@ -5,6 +5,11 @@ module Cassandra
     describe Cluster do
       let(:cluster) { Cluster.new }
 
+      before do
+        # hack to to compare empty tables
+        allow(Concurrent::Map).to receive(:new).and_return({})
+      end
+
       describe '#connect_async' do
         let(:keyspace) { nil }
         subject { cluster.connect_async(keyspace) }
