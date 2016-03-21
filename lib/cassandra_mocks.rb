@@ -14,6 +14,7 @@
 # limitations under the License.
 #++
 
+require 'concurrent'
 require 'cassandra'
 require 'active_support/all'
 require 'active_support/core_ext/class/attribute_accessors'

@@ -4,8 +4,7 @@ module Cassandra
       attr_reader :rows
 
       def initialize(keyspace, name, partition_key, clustering_key, fields)
-        @mutex = Mutex.new
-        @rows = []
+        @rows = Concurrent::Array.new
 
         compaction = Cassandra::Table::Compaction.new('mock', {})
         options = Cassandra::Table::Options.new({}, compaction, {}, false, 'mock')
@@ -22,76 +21,70 @@ module Cassandra
       end
 
       def insert(attributes, options = {})
-        @mutex.synchronize do
-          validate_columns!(attributes)
-          validate_primary_key_presence!(attributes)
+        validate_columns!(attributes)
+        validate_primary_key_presence!(attributes)
 
-          prev_row_index = rows.find_index do |row|
-            row.slice(*primary_key_names) == attributes.slice(*primary_key_names)
-          end
-
-          if prev_row_index
-            return false if options[:check_exists]
-            rows[prev_row_index] = attributes
-          else
-            rows << attributes
-          end
-          true
+        prev_row_index = rows.find_index do |row|
+          row.slice(*primary_key_names) == attributes.slice(*primary_key_names)
         end
+
+        if prev_row_index
+          return false if options[:check_exists]
+          rows[prev_row_index] = attributes
+        else
+          rows << attributes
+        end
+        true
       end
 
       def select(*columns)
-        @mutex.synchronize do
-          filter = select_filter(columns)
-          limit = filter.delete(:limit)
-          order = select_order(filter)
+        filter = select_filter(columns)
+        limit = filter.delete(:limit)
+        order = select_order(filter)
 
-          order_keys_in_partition = order.keys.select { |column| partition_key_names.include?(column) }
-          if order_keys_in_partition.any?
-            raise Cassandra::Errors::InvalidError.new("Order by is currently only supported on the clustered columns of the PRIMARY KEY, got #{order_keys_in_partition * ', '}", 'MockStatement')
-          end
-
-          missing_ordering_keys = order.keys.select { |column| !column_names.include?(column) }
-          if missing_ordering_keys.any?
-            raise Cassandra::Errors::InvalidError.new("Order by on unknown column(s) #{missing_ordering_keys * ', '}", 'MockStatement')
-          end
-
-          out_of_order = order.keys.each.with_index.any? { |column, index| clustering_key_names[index] != column }
-          if out_of_order
-            raise Cassandra::Errors::InvalidError.new("Order by currently only support the ordering of columns following their declared order in the PRIMARY KEY (expected #{clustering_key_names * ', '} got #{order.keys * ', '})", 'MockStatement')
-          end
-
-          inconsistent_order = (order.values.uniq.count > 1)
-          if inconsistent_order
-            raise Cassandra::Errors::InvalidError.new('Ordering direction must be consistent across all clustering columns', 'MockStatement')
-          end
-
-          filter = filter.fetch(:restriction) { {} }
-          unless filter.empty?
-            validate_partion_key_filter!(filter)
-            validate_clustering_column_filter!(filter)
-            raise_if_fields_restricted!(filter)
-          end
-
-          filtered_rows = filtered_rows(filter)
-          sorted_rows = filtered_rows.sort do |lhs, rhs|
-            compare_rows(0, lhs, rhs, order)
-          end
-
-          sorted_rows = sorted_rows[0...limit] if limit
-
-          result_rows = sorted_rows.map do |row|
-            (columns.first == '*') ? row : row.slice(*columns)
-          end
-          ResultPage.new(result_rows)
+        order_keys_in_partition = order.keys.select { |column| partition_key_names.include?(column) }
+        if order_keys_in_partition.any?
+          raise Cassandra::Errors::InvalidError.new("Order by is currently only supported on the clustered columns of the PRIMARY KEY, got #{order_keys_in_partition * ', '}", 'MockStatement')
         end
+
+        missing_ordering_keys = order.keys.select { |column| !column_names.include?(column) }
+        if missing_ordering_keys.any?
+          raise Cassandra::Errors::InvalidError.new("Order by on unknown column(s) #{missing_ordering_keys * ', '}", 'MockStatement')
+        end
+
+        out_of_order = order.keys.each.with_index.any? { |column, index| clustering_key_names[index] != column }
+        if out_of_order
+          raise Cassandra::Errors::InvalidError.new("Order by currently only support the ordering of columns following their declared order in the PRIMARY KEY (expected #{clustering_key_names * ', '} got #{order.keys * ', '})", 'MockStatement')
+        end
+
+        inconsistent_order = (order.values.uniq.count > 1)
+        if inconsistent_order
+          raise Cassandra::Errors::InvalidError.new('Ordering direction must be consistent across all clustering columns', 'MockStatement')
+        end
+
+        filter = filter.fetch(:restriction) { {} }
+        unless filter.empty?
+          validate_partion_key_filter!(filter)
+          validate_clustering_column_filter!(filter)
+          raise_if_fields_restricted!(filter)
+        end
+
+        filtered_rows = filtered_rows(filter)
+        sorted_rows = filtered_rows.sort do |lhs, rhs|
+          compare_rows(0, lhs, rhs, order)
+        end
+
+        sorted_rows = sorted_rows[0...limit] if limit
+
+        result_rows = sorted_rows.map do |row|
+          (columns.first == '*') ? row : row.slice(*columns)
+        end
+        ResultPage.new(result_rows)
       end
 
       def delete(filter)
         rows_to_remove = select('*', restriction: filter)
-        @mutex.synchronize do
-          @rows.reject! { |row| rows_to_remove.include?(row) }
-        end
+        @rows.reject! { |row| rows_to_remove.include?(row) }
       end
 
       # make #partition_key public
@@ -107,7 +100,7 @@ module Cassandra
       private
 
       def select_filter(columns)
-        columns.last.is_a?(Hash) ? columns.pop : {}
+        columns.last.is_a?(Hash) ? columns.pop.dup : {}
       end
 
       def select_order(filter)
