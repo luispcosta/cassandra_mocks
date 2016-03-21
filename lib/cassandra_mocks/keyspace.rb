@@ -5,6 +5,7 @@ module Cassandra
       def initialize(name)
         replication = Replication.new('mock', {})
         super(name, false, replication, {})
+        @tables = Concurrent::Map.new
       end
 
       def add_table(table_name, primary_key, columns, ignore_existing)

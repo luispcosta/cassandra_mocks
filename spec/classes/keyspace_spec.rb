@@ -8,6 +8,11 @@ module Cassandra
       let(:replication) { Cassandra::Keyspace::Replication.new('mock', {}) }
       let(:super_keyspace) { Cassandra::Keyspace.new(name, false, replication, {}) }
 
+      before do
+        # hack to to compare empty tables
+        allow(Concurrent::Map).to receive(:new).and_return({})
+      end
+
       subject { Keyspace.new(name) }
 
       it { is_expected.to eq(super_keyspace) }
