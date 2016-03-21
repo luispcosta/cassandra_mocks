@@ -2,6 +2,8 @@ module Cassandra
   module Mocks
     class Table < Cassandra::Table
       def initialize(keyspace, name, partition_key, clustering_key, fields)
+        @mutex = Mutex.new
+
         compaction = Cassandra::Table::Compaction.new('mock', {})
         options = Cassandra::Table::Options.new({}, compaction, {}, false, 'mock')
         column_map = column_map(partition_key, clustering_key, fields)
@@ -17,20 +19,22 @@ module Cassandra
       end
 
       def insert(attributes, options = {})
-        validate_columns!(attributes)
-        validate_primary_key_presence!(attributes)
+        @mutex.synchronize do
+          validate_columns!(attributes)
+          validate_primary_key_presence!(attributes)
 
-        prev_row_index = rows.find_index do |row|
-          row.slice(*primary_key_names) == attributes.slice(*primary_key_names)
-        end
+          prev_row_index = rows.find_index do |row|
+            row.slice(*primary_key_names) == attributes.slice(*primary_key_names)
+          end
 
-        if prev_row_index
-          return false if options[:check_exists]
-          rows[prev_row_index] = attributes
-        else
-          rows << attributes
+          if prev_row_index
+            return false if options[:check_exists]
+            rows[prev_row_index] = attributes
+          else
+            rows << attributes
+          end
+          true
         end
-        true
       end
 
       def select(*columns)
@@ -79,8 +83,10 @@ module Cassandra
       end
 
       def delete(filter)
-        rows_to_remove = select('*', restriction: filter)
-        @rows.reject! { |row| rows_to_remove.include?(row) }
+        @mutex.synchronize do
+          rows_to_remove = select('*', restriction: filter)
+          @rows.reject! { |row| rows_to_remove.include?(row) }
+        end
       end
 
       def rows
