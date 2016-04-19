@@ -85,7 +85,9 @@ module Cassandra
 
       def insert_query(result, statement)
         check_exists = !!statement.args[:check_exists]
-        inserted = cluster.keyspace(keyspace_for_statement(statement)).table(statement.args[:table]).insert(statement.args[:values], check_exists: check_exists)
+        table = cluster.keyspace(keyspace_for_statement(statement)).table(statement.args[:table])
+        raise Cassandra::Errors::InvalidError.new('INSERT statement are not allowed on counter tables, use UPDATE instead', 'MockStatement') if table.counter_table?
+        inserted = table.insert(statement.args[:values], check_exists: check_exists)
         result << {'[applied]' => inserted} if check_exists
       end
 

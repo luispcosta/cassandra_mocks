@@ -219,7 +219,8 @@ module Cassandra
             cluster.keyspace(table_keyspace).tap { |ks| ks.add_table(table_name, primary_key, columns, false) }.table(table_name)
           end
           let(:primary_key) { [['section'], 'genre'] }
-          let(:columns) { {'section' => 'text', 'genre' => 'text', 'description' => 'text'} }
+          let(:field_type) { 'text' }
+          let(:columns) { {'section' => 'text', 'genre' => 'text', 'description' => field_type} }
           let(:column_count) { columns.count }
           let(:column_names) { columns.keys }
           let(:column_values) { columns.keys.map { SecureRandom.uuid } }
@@ -242,6 +243,14 @@ module Cassandra
 
           it 'should resolve to an empty ResultPage' do
             expect(subject.execute_async(query).get).to eq([])
+          end
+
+          context 'with a counter table' do
+            let(:field_type) { 'counter' }
+
+            it 'should raise and InvalidError' do
+              expect { subject.execute_async(query).get }.to raise_error(Cassandra::Errors::InvalidError, 'INSERT statement are not allowed on counter tables, use UPDATE instead')
+            end
           end
 
           context 'when checking if the record already exists' do
