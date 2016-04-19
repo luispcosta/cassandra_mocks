@@ -40,6 +40,16 @@ module Cassandra
         end
       end
 
+      describe '#counter_table?' do
+        its(:counter_table?) { is_expected.to eq(false) }
+
+        context 'when a counter column is present' do
+          let(:fields_part_one) { Cassandra::Column.new('some_count', 'counter', :asc) }
+
+          its(:counter_table?) { is_expected.to eq(true) }
+        end
+      end
+
       context 'with a different table configuration' do
         let(:name) { 'broken table' }
         let(:partition_key) { [pk_part_one, pk_part_two] }

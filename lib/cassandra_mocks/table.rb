@@ -10,7 +10,7 @@ module Cassandra
         options = Cassandra::Table::Options.new({}, compaction, {}, false, 'mock')
         column_map = column_map(partition_key, clustering_key, fields)
 
-        counter_column = fields.find { |field| field.type.to_sym == :counter }
+        @counter_column = fields.find { |field| field.type.to_sym == :counter }
         has_non_counters = !!fields.find { |field| field.type.to_sym != :counter }
 
         if counter_column && has_non_counters
@@ -18,6 +18,10 @@ module Cassandra
         end
 
         super(keyspace, name, partition_key, clustering_key, column_map, options, [])
+      end
+
+      def counter_table?
+        !!counter_column
       end
 
       def insert(attributes, options = {})
@@ -98,6 +102,8 @@ module Cassandra
       end
 
       private
+
+      attr_reader :counter_column
 
       def select_filter(columns)
         columns.last.is_a?(Hash) ? columns.pop.dup : {}
