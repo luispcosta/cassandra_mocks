@@ -617,6 +617,8 @@ module Cassandra
           end
 
           context 'when the update contains arithmetic' do
+            let(:field_type) { 'counter' }
+            let(:columns) { {'pk1' => 'text', 'ck1' => 'text', 'field1' => field_type} }
             let(:row) { {'pk1' => 'books', 'ck1' => 'mystery', 'field1' => 17} }
             let(:query) { "UPDATE #{table_name} SET field1 = field1 + 3 WHERE pk1 = 'books'" }
 
@@ -624,6 +626,14 @@ module Cassandra
               subject.execute_async(query).get
               expected_row = row.merge('field1' => 20)
               expect(table.select('*')).to eq([expected_row])
+            end
+
+            context 'when the updated field is not a counter' do
+              let(:field_type) { 'int' }
+
+              it 'should raise and InvalidError' do
+                expect { subject.execute_async(query).get }.to raise_error(Cassandra::Errors::InvalidError, 'Invalid operation (field1 = field1 + ?) for non counter column field1')
+              end
             end
           end
         end

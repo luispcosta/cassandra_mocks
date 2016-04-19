@@ -105,14 +105,15 @@ module Cassandra
         rows_to_update = table.select('*', restriction: statement.args[:filter])
         rows_to_update = [statement.args[:filter].dup] if rows_to_update.empty?
         rows_to_update.each do |row|
-          updated_row = updated_row(row, statement)
+          updated_row = updated_row(table, row, statement)
           cluster.keyspace(keyspace_for_statement(statement)).table(statement.args[:table]).insert(updated_row)
         end
       end
 
-      def updated_row(row, statement)
+      def updated_row(table, row, statement)
         statement.args[:values].inject(row.dup) do |memo, (column, value)|
           if value.is_a?(Statement::Arithmetic)
+            raise Cassandra::Errors::InvalidError.new("Invalid operation (#{column} = #{column} + ?) for non counter column #{column}", 'MockStatement') unless table.counter_table?
             value.apply(memo)
           else
             memo.merge!(column => value)
