@@ -315,6 +315,16 @@ module Cassandra
               end
             end
 
+            describe 'an invalid range query on partition key' do
+              let(:pk_part_one) { Cassandra::Column.new('pk1', 'string', :asc) }
+              let(:pk_part_two) { Cassandra::Column.new('pk2', 'string', :asc) }
+              let(:partition_key) { [pk_part_one, pk_part_two] }
+
+              it 'should raise an error indicating the invalid partition part used in the range query' do
+                expect { subject.select('*', restriction: {'pk1' => %w(hello world), 'pk2' => 'goodbye world'}) }.to raise_error(Cassandra::Errors::InvalidError, 'Partition KEY part pk1 cannot be restricted by IN relation (only the last part of the partition key can)')
+              end
+            end
+
             describe 'an invalid ordering clause' do
               before do
                 subject.insert({'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 2'})
