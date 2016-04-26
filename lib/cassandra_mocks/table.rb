@@ -68,11 +68,7 @@ module Cassandra
 
         filter = filter.fetch(:restriction) { {} }
         unless filter.empty?
-          invalid_partition_range_column = partition_key_names[0..-2].find { |column| filter[column].is_a?(Array) }
-          if invalid_partition_range_column
-            raise Cassandra::Errors::InvalidError.new("Partition KEY part #{invalid_partition_range_column} cannot be restricted by IN relation (only the last part of the partition key can)", 'MockStatement')
-          end
-
+          validate_range_query!(filter)
           validate_partion_key_filter!(filter)
           validate_clustering_column_filter!(filter)
           raise_if_fields_restricted!(filter)
@@ -216,6 +212,13 @@ module Cassandra
                     row[key]
                   end
           memo.merge!(key => value)
+        end
+      end
+
+      def validate_range_query!(filter)
+        invalid_partition_range_column = partition_key_names[0..-2].find { |column| filter[column].is_a?(Array) }
+        if invalid_partition_range_column
+          raise Cassandra::Errors::InvalidError.new("Partition KEY part #{invalid_partition_range_column} cannot be restricted by IN relation (only the last part of the partition key can)", 'MockStatement')
         end
       end
 
