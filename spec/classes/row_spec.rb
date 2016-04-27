@@ -4,7 +4,14 @@ module Cassandra
   module Mocks
     describe Row do
 
-      let(:row) { Row.new }
+      let(:partition_key) { Faker::Lorem.words }
+      let(:row) { Row.new(partition_key) }
+
+      subject { row }
+
+      describe '#partition_key' do
+        its(:partition_key) { is_expected.to eq(partition_key) }
+      end
 
       describe '#insert_record' do
         let(:clustering_columns) { %w(ck1) }
@@ -73,6 +80,45 @@ module Cassandra
             end
           end
         end
+      end
+
+      describe '#find_records' do
+        let(:search_clustering_columns) { [] }
+
+        subject { row.find_records(search_clustering_columns) }
+
+        it { is_expected.to eq([]) }
+
+        context 'with some records' do
+          let(:clustering_columns) { %w(ck1) }
+          let(:record_values) { Faker::Lorem.words }
+
+          before do
+            row.insert_record(clustering_columns, record_values, false)
+          end
+
+          it { is_expected.to eq([[*partition_key, 'ck1', *record_values]]) }
+
+          context 'with multiple clustering columns' do
+            let(:clustering_columns) { %w(ck1 ck2) }
+
+            it { is_expected.to eq([[*partition_key, 'ck1', 'ck2', *record_values]]) }
+          end
+
+          context 'with multiple records' do
+            let(:clustering_columns_two) { %w(ck2) }
+            let(:record_values_two) { Faker::Lorem.words }
+            let(:result_record) { [*partition_key, 'ck1', *record_values] }
+            let(:result_record_two) { [*partition_key, 'ck2', *record_values_two] }
+
+            before do
+              row.insert_record(clustering_columns_two, record_values_two, false)
+            end
+
+            it { is_expected.to eq([result_record, result_record_two]) }
+          end
+        end
+
       end
 
     end

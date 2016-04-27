@@ -3,11 +3,12 @@ module Cassandra
     class Row
       include MonitorMixin
 
-      attr_reader :clusters
+      attr_reader :clusters, :partition_key
 
-      def initialize
+      def initialize(partition_key)
         @clusters = {}
-        super
+        @partition_key = partition_key
+        super()
       end
 
       def insert_record(clustering_columns, record_values, check_exists)
@@ -17,7 +18,25 @@ module Cassandra
         end
       end
 
+      def find_records(clustering_columns)
+        if @clusters.any?
+          @clusters.map do |clustering_key, record|
+            cluster_values(record, [clustering_key])
+          end
+        else
+          []
+        end
+      end
+
       private
+
+      def cluster_values(cluster, values)
+        if cluster.is_a?(Record)
+          [*partition_key, *values, *cluster.values]
+        else
+          cluster_values(cluster.values.first, values + [cluster.keys.first])
+        end
+      end
 
       def record_cluster(partial_clustering_columns)
         partial_clustering_columns.inject(clusters) do |memo, cluster_key|
