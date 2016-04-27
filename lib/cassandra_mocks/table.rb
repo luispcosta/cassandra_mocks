@@ -67,12 +67,7 @@ module Cassandra
         end
 
         filter = filter.fetch(:restriction) { {} }
-        unless filter.empty?
-          validate_range_query!(filter)
-          validate_partion_key_filter!(filter)
-          validate_clustering_column_filter!(filter)
-          raise_if_fields_restricted!(filter)
-        end
+        validate_filter!(filter)
 
         filtered_rows = filtered_rows(filter)
         sorted_rows = filtered_rows.sort do |lhs, rhs|
@@ -90,6 +85,15 @@ module Cassandra
       def delete(filter)
         rows_to_remove = select('*', restriction: filter)
         @rows.reject! { |row| rows_to_remove.include?(row) }
+      end
+
+      def validate_filter!(filter)
+        unless filter.empty?
+          validate_range_query!(filter)
+          validate_partion_key_filter!(filter)
+          validate_clustering_column_filter!(filter)
+          raise_if_fields_restricted!(filter)
+        end
       end
 
       # make #partition_key public
