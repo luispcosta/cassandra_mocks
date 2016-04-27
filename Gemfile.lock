@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    cassandra_mocks (1.0.5)
+    cassandra_mocks (1.0.6)
       activesupport (~> 4.0)
       cassandra-driver (>= 1.1, <= 2.0.1)
       concurrent-ruby (~> 1.0.0)
@@ -9,7 +9,7 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    activesupport (4.2.5.2)
+    activesupport (4.2.6)
       i18n (~> 0.7)
       json (~> 1.7, >= 1.7.7)
       minitest (~> 5.1)
