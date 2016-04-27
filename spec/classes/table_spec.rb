@@ -60,7 +60,7 @@ module Cassandra
       end
 
       describe '#insert' do
-        let(:attributes) { {'pk1' => '15', 'ck1' => 'hello world'} }
+        let(:attributes) { {'pk1' => '15', 'ck1' => 'hello world', 'field1' => nil} }
 
         it 'should create a record from the input row' do
           subject.insert(attributes)
@@ -219,9 +219,9 @@ module Cassandra
         end
 
         context 'with multiple rows' do
-          let(:attributes) { {'pk1' => 'other partition', 'ck1' => 'clustering'} }
-          let(:attributes_two) { {'pk1' => 'other partition', 'ck1' => 'other clustering'} }
-          let(:attributes_three) { {'pk1' => 'other partition', 'ck1' => 'other clustering2'} }
+          let(:attributes) { {'pk1' => 'other partition', 'ck1' => 'clustering', 'field1' => nil} }
+          let(:attributes_two) { {'pk1' => 'other partition', 'ck1' => 'other clustering', 'field1' => nil} }
+          let(:attributes_three) { {'pk1' => 'other partition', 'ck1' => 'other clustering2', 'field1' => nil} }
 
           before do
             subject.insert(attributes_two)
@@ -255,8 +255,8 @@ module Cassandra
           it 'should sort by partition key, then by clustering columns' do
             subject.insert({'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'})
             expected_results = [
-                {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'},
-                {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 3'},
+                {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2', 'field1' => nil},
+                {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 3', 'field1' => nil},
             ]
             expect(subject.select('*')).to eq(expected_results)
           end
@@ -265,8 +265,8 @@ module Cassandra
             it 'should sort by partition key, then by clustering columns' do
               subject.insert({'pk1' => 'partition 3', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'})
               expected_results = [
-                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'},
-                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 3'},
+                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2', 'field1' => nil},
+                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 3', 'field1' => nil},
               ]
               expect(subject.select('*')).to eq(expected_results)
             end
@@ -276,8 +276,8 @@ module Cassandra
             it 'should sort by partition key, then by clustering columns' do
               subject.insert({'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'})
               expected_results = [
-                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'},
-                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 3'},
+                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2', 'field1' => nil},
+                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 3', 'field1' => nil},
               ]
               expect(subject.select('*')).to eq(expected_results)
             end
@@ -287,8 +287,8 @@ module Cassandra
             it 'should sort by partition key, then by clustering columns' do
               subject.insert({'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 2'})
               expected_results = [
-                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 2'},
-                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 3'},
+                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 2', 'field1' => nil},
+                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 3', 'field1' => nil},
               ]
               expect(subject.select('*')).to eq(expected_results)
             end
@@ -298,8 +298,8 @@ module Cassandra
             it 'should sort by partition key, then by clustering columns in the specified order' do
               subject.insert({'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 2'})
               expected_results = [
-                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 3'},
-                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 2'},
+                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 3', 'field1' => nil},
+                  {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 2', 'field1' => nil},
               ]
               expect(subject.select('*', order: {'ck1' => :desc, 'ck2' => :desc})).to eq(expected_results)
             end
@@ -308,8 +308,8 @@ module Cassandra
               it 'should sort by partition key, then by clustering columns in the specified order' do
                 subject.insert({'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 2'})
                 expected_results = [
-                    {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 2'},
-                    {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 3'},
+                    {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 2', 'field1' => nil},
+                    {'pk1' => 'partition 3', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 3', 'ck2' => 'additional clustering 3', 'field1' => nil},
                 ]
                 expect(subject.select('*', order: {'ck1' => :asc, 'ck2' => :asc})).to eq(expected_results)
               end
@@ -412,17 +412,17 @@ module Cassandra
 
           describe 'filtering by partition key' do
             it 'should return all records for that partition' do
-              expected_results = [{'pk1' => 'partition', 'pk2' => 'additional partition', 'ck1' => 'clustering', 'ck2' => 'additional clustering'}]
+              expected_results = [{'pk1' => 'partition', 'pk2' => 'additional partition', 'ck1' => 'clustering', 'ck2' => 'additional clustering', 'field1' => nil}]
               expect(subject.select('*', restriction: {'pk1' => 'partition', 'pk2' => 'additional partition'})).to eq(expected_results)
             end
 
             context 'with a different partition key' do
               it 'should return all records for that partition' do
                 expected_results = [
-                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1'},
-                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2'},
-                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 1'},
-                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1', 'field1' => nil},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2', 'field1' => nil},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 1', 'field1' => nil},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2', 'field1' => nil},
                 ]
                 expect(subject.select('*', restriction: {'pk1' => 'partition 2', 'pk2' => 'additional partition 2'})).to eq(expected_results)
               end
@@ -431,14 +431,14 @@ module Cassandra
             context 'when the partition key is IN restricted' do
               it 'should return all records for that partition range' do
                 expected_results = [
-                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 1', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1'},
-                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 1', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2'},
-                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 1', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 1'},
-                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 1', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'},
-                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1'},
-                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2'},
-                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 1'},
-                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 1', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1', 'field1' => nil},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 1', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2', 'field1' => nil},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 1', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 1', 'field1' => nil},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 1', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2', 'field1' => nil},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1', 'field1' => nil},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2', 'field1' => nil},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 1', 'field1' => nil},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 3', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2', 'field1' => nil},
                 ]
                 expect(subject.select('*', restriction: {'pk1' => 'partition 2', 'pk2' => ['additional partition 1', 'additional partition 3']})).to eq(expected_results)
               end
@@ -464,8 +464,8 @@ module Cassandra
           describe 'filtering by clustering columns' do
             it 'should return all records for that partition, matching the specified clustering columns' do
               expected_results = [
-                  {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1'},
-                  {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2'},
+                  {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1', 'field1' => nil},
+                  {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2', 'field1' => nil},
               ]
               expect(subject.select('*', restriction: {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1'})).to eq(expected_results)
             end
@@ -473,10 +473,10 @@ module Cassandra
             context 'with a comparitor' do
               it 'should return all records for that partition, matching the specified clustering columns' do
                 expected_results = [
-                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1'},
-                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2'},
-                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 1'},
-                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1', 'field1' => nil},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2', 'field1' => nil},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 1', 'field1' => nil},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2', 'field1' => nil},
                 ]
                 comparitor = Statement::Comparitor.new(:ge, 'ck1', 'clustering 1')
                 expect(subject.select('*', restriction: {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => comparitor})).to eq(expected_results)
@@ -485,8 +485,8 @@ module Cassandra
               context 'with a different comparison' do
                 it 'should return all records for that partition, matching the specified clustering columns' do
                   expected_results = [
-                      {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1'},
-                      {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2'},
+                      {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1', 'field1' => nil},
+                      {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2', 'field1' => nil},
                   ]
                   comparitor = Statement::Comparitor.new(:lt, 'ck1', 'clustering 2')
                   expect(subject.select('*', restriction: {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => comparitor})).to eq(expected_results)
@@ -500,10 +500,10 @@ module Cassandra
                 let(:restriction) { {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', comparer_keys => comparitor} }
                 let(:expected_results) do
                   [
-                      {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1'},
-                      {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2'},
-                      {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 1'},
-                      {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2'},
+                      {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1', 'field1' => nil},
+                      {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 2', 'field1' => nil},
+                      {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 1', 'field1' => nil},
+                      {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 2', 'ck2' => 'additional clustering 2', 'field1' => nil},
                   ]
                 end
 
@@ -544,7 +544,7 @@ module Cassandra
             context 'with multiple clustering columns specified' do
               it 'should return all records for that partition, matching the specified clustering columns' do
                 expected_results = [
-                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1'},
+                    {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1', 'field1' => nil},
                 ]
                 expect(subject.select('*', restriction: {'pk1' => 'partition 2',
                                                          'pk2' => 'additional partition 2',
@@ -564,7 +564,7 @@ module Cassandra
               let(:filter) do
                 {'pk1' => 'part', 'pk2' => 'part', 'ck1' => [Statement::Comparitor.new(:gt, 'ck1', 'a'), Statement::Comparitor.new(:lt, 'ck1', 'c')]}
               end
-              let(:expected_results) { [{'pk1' => 'part', 'pk2' => 'part', 'ck1' => 'b', 'ck2' => 'z'}] }
+              let(:expected_results) { [{'pk1' => 'part', 'pk2' => 'part', 'ck1' => 'b', 'ck2' => 'z', 'field1' => nil}] }
 
               it 'should return the row that lies in between the comparisons' do
                 expect(subject.select('*', restriction: filter)).to eq(expected_results)

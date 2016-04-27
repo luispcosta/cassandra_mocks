@@ -1,10 +1,11 @@
 module Cassandra
   module Mocks
     class Table < Cassandra::Table
+      include MonitorMixin
       attr_reader :rows
 
       def initialize(keyspace, name, partition_key, clustering_key, fields)
-        @rows = Concurrent::Array.new
+        @rows = Concurrent::Map.new { |hash, key| hash[key] = Row.new(key) }
 
         compaction = Cassandra::Table::Compaction.new('mock', {})
         options = Cassandra::Table::Options.new({}, compaction, {}, false, 'mock')
@@ -20,6 +21,21 @@ module Cassandra
         super(keyspace, name, partition_key, clustering_key, column_map, options, [])
       end
 
+      def rows
+        results = []
+        @rows.each_pair do |_, row|
+          row_results = row.find_records([]).map do |record|
+            attributes = {}
+            column_names.each.with_index do |column, index|
+              attributes[column] = record[index]
+            end
+            attributes
+          end
+          results << row_results
+        end
+        results.flatten
+      end
+
       def counter_table?
         !!counter_column
       end
@@ -28,17 +44,8 @@ module Cassandra
         validate_columns!(attributes)
         validate_primary_key_presence!(attributes)
 
-        prev_row_index = rows.find_index do |row|
-          row.slice(*primary_key_names) == attributes.slice(*primary_key_names)
-        end
-
-        if prev_row_index
-          return false if options[:check_exists]
-          rows[prev_row_index] = attributes
-        else
-          rows << attributes
-        end
-        true
+        row = @rows[attribute_partition_key(attributes)]
+        row.insert_record(attribute_clustering_key(attributes), attribute_fields(attributes), options[:check_exists])
       end
 
       def select(*columns)
@@ -83,8 +90,21 @@ module Cassandra
       end
 
       def delete(filter)
-        rows_to_remove = select('*', restriction: filter)
-        @rows.reject! { |row| rows_to_remove.include?(row) }
+        validate_filter!(filter)
+        row = @rows[attribute_partition_key(filter)]
+        row.delete_records(attribute_clustering_key(filter).compact)
+      end
+
+      def attribute_partition_key(attributes)
+        partition_key_names.map { |column| attributes[column] }
+      end
+
+      def attribute_clustering_key(attributes)
+        clustering_key_names.map { |column| attributes[column] }
+      end
+
+      def attribute_fields(attributes)
+        field_names.map { |column| attributes[column] }
       end
 
       def validate_filter!(filter)
@@ -264,6 +284,10 @@ module Cassandra
 
       def column_names
         columns.map(&:name)
+      end
+
+      def field_names
+        column_names - (partition_key_names + clustering_key_names)
       end
 
       def find_column(name)
