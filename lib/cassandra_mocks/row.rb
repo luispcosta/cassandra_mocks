@@ -27,6 +27,17 @@ module Cassandra
         end
       end
 
+      def delete_records(clustering_columns)
+        synchronize do
+          if clustering_columns.any?
+            cluster = find_cluster(clustering_columns[0..-2])
+            cluster.delete(clustering_columns.last) if cluster
+          else
+            @clusters.clear
+          end
+        end
+      end
+
       private
 
       def cluster_values(cluster, values)

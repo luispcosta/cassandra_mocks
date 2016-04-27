@@ -155,7 +155,56 @@ module Cassandra
             it { is_expected.to eq([result_record, result_record_two]) }
           end
         end
+      end
 
+      describe '#delete_records' do
+        let(:search_clustering_columns) { [] }
+
+        subject { row.find_records(search_clustering_columns) }
+
+        context 'with no record' do
+          before { row.delete_records(search_clustering_columns) }
+
+          it { is_expected.to be_empty }
+        end
+
+        context 'with some records' do
+          let(:clustering_columns) { %w(ck1) }
+          let(:record_values) { Faker::Lorem.words }
+
+          before do
+            row.insert_record(clustering_columns, record_values, false)
+            row.delete_records(search_clustering_columns)
+          end
+
+          it { is_expected.to be_empty }
+
+          context 'with a restriction' do
+            let(:search_clustering_columns) { %w(ck2) }
+
+            subject { row.find_records([]) }
+
+            it { is_expected.to eq([[*partition_key, 'ck1', *record_values]]) }
+          end
+        end
+
+        context 'with multiple records and a restriction' do
+          let(:search_clustering_columns) { %w(ck2) }
+          let(:clustering_columns) { %w(ck1) }
+          let(:record_values) { Faker::Lorem.words }
+          let(:clustering_columns_two) { %w(ck2) }
+          let(:record_values_two) { Faker::Lorem.words }
+
+          subject { row.find_records([]) }
+
+          before do
+            row.insert_record(clustering_columns, record_values, false)
+            row.insert_record(clustering_columns_two, record_values_two, false)
+            row.delete_records(search_clustering_columns)
+          end
+
+          it { is_expected.to eq([[*partition_key, 'ck1', *record_values]]) }
+        end
       end
 
     end
