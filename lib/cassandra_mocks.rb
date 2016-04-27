@@ -21,6 +21,7 @@ require 'active_support/core_ext/class/attribute_accessors'
 
 require 'cassandra_mocks/result_page'
 require 'cassandra_mocks/record'
+require 'cassandra_mocks/row'
 require 'cassandra_mocks/table'
 require 'cassandra_mocks/statement/batch'
 require 'cassandra_mocks/statement/arithmetic'
