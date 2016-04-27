@@ -20,8 +20,17 @@ module Cassandra
 
       def find_records(clustering_columns)
         if @clusters.any?
-          @clusters.map do |clustering_key, record|
-            cluster_values(record, [clustering_key])
+          if clustering_columns.any?
+            cluster = find_cluster(clustering_columns)
+            if cluster
+              [cluster_values(cluster, [*clustering_columns])]
+            else
+              []
+            end
+          else
+            @clusters.map do |clustering_key, record|
+              cluster_values(record, [clustering_key])
+            end
           end
         else
           []
@@ -35,6 +44,12 @@ module Cassandra
           [*partition_key, *values, *cluster.values]
         else
           cluster_values(cluster.values.first, values + [cluster.keys.first])
+        end
+      end
+
+      def find_cluster(clustering_columns)
+        clustering_columns.inject(@clusters) do |cluster, cluster_key|
+          cluster[cluster_key] if cluster
         end
       end
 

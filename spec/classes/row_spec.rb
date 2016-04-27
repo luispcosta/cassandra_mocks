@@ -99,10 +99,34 @@ module Cassandra
 
           it { is_expected.to eq([[*partition_key, 'ck1', *record_values]]) }
 
+          context 'with a restriction' do
+            let(:search_clustering_columns) { %w(ck2) }
+
+            it { is_expected.to eq([]) }
+
+            context 'when the restriction includes an existing record' do
+              let(:search_clustering_columns) { %w(ck1) }
+
+              it { is_expected.to eq([[*partition_key, 'ck1', *record_values]]) }
+            end
+          end
+
           context 'with multiple clustering columns' do
             let(:clustering_columns) { %w(ck1 ck2) }
 
             it { is_expected.to eq([[*partition_key, 'ck1', 'ck2', *record_values]]) }
+
+            context 'with a restriction' do
+              let(:search_clustering_columns) { %w(ck1 ck1) }
+
+              it { is_expected.to eq([]) }
+
+              context 'when the restriction includes an existing record' do
+                let(:search_clustering_columns) { %w(ck1 ck2) }
+
+                it { is_expected.to eq([[*partition_key, 'ck1', 'ck2', *record_values]]) }
+              end
+            end
           end
 
           context 'with multiple records' do
