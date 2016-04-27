@@ -12,15 +12,15 @@ module Cassandra
 
       def insert_record(clustering_columns, record_values, check_exists)
         synchronize do
-          record_cluster = record_cluster(clustering_columns)
+          record_cluster = record_cluster(clustering_columns[0..-2])
           update_record(check_exists, clustering_columns, record_cluster, record_values)
         end
       end
 
       private
 
-      def record_cluster(clustering_columns)
-        clustering_columns[0..-2].inject(clusters) do |memo, cluster_key|
+      def record_cluster(partial_clustering_columns)
+        partial_clustering_columns.inject(clusters) do |memo, cluster_key|
           memo[cluster_key] ||= {}
         end
       end
