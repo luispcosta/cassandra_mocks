@@ -127,6 +127,19 @@ module Cassandra
                 it { is_expected.to eq([[*partition_key, 'ck1', 'ck2', *record_values]]) }
               end
             end
+
+            context 'with multiple records' do
+              let(:clustering_columns_two) { %w(ck1 ck3) }
+              let(:record_values_two) { Faker::Lorem.words }
+              let(:result_record) { [*partition_key, 'ck1', 'ck2', *record_values] }
+              let(:result_record_two) { [*partition_key, 'ck1', 'ck3', *record_values_two] }
+
+              before do
+                row.insert_record(clustering_columns_two, record_values_two, false)
+              end
+
+              it { is_expected.to eq([result_record, result_record_two]) }
+            end
           end
 
           context 'with multiple records' do

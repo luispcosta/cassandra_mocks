@@ -19,19 +19,9 @@ module Cassandra
       end
 
       def find_records(clustering_columns)
-        if @clusters.any?
-          if clustering_columns.any?
-            cluster = find_cluster(clustering_columns)
-            if cluster
-              [cluster_values(cluster, [*clustering_columns])]
-            else
-              []
-            end
-          else
-            @clusters.map do |clustering_key, record|
-              cluster_values(record, [clustering_key])
-            end
-          end
+        cluster = find_cluster(clustering_columns)
+        if cluster
+          [cluster_values(cluster, [*clustering_columns])].flatten.map(&:values)
         else
           []
         end
@@ -41,9 +31,11 @@ module Cassandra
 
       def cluster_values(cluster, values)
         if cluster.is_a?(Record)
-          [*partition_key, *values, *cluster.values]
+          Record.new([*partition_key, *values, *cluster.values])
         else
-          cluster_values(cluster.values.first, values + [cluster.keys.first])
+          cluster.map do |clustering_key, child_cluster|
+            cluster_values(child_cluster, values + [clustering_key])
+          end
         end
       end
 
