@@ -49,7 +49,7 @@ module Cassandra
             when :update
               update_query(statement)
             when :truncate
-              cluster.keyspace(keyspace_for_statement(statement)).table(statement.args[:table]).rows.clear
+              cluster.keyspace(keyspace_for_statement(statement)).table(statement.args[:table]).clear
             when :drop_keyspace
               cluster.drop_keyspace(statement.args[:keyspace])
             when :drop_table
