@@ -89,30 +89,7 @@ module Cassandra
                                       row.find_records(cluster_key)
                                     end
                           rows = record_attributes(records)
-
-                          if cluster_slice
-                            rows.select do |row|
-                              partial_row = begin
-                                comparitor = cluster_slice.is_a?(Statement::Comparitor) ? cluster_slice : cluster_slice.first
-                                value = if comparitor.column.is_a?(Array)
-                                          row.values_at(*comparitor.column)
-                                        else
-                                          row[comparitor.column]
-                                        end
-                                {comparitor.column => value}
-                              end
-
-
-                              if cluster_slice.is_a?(Statement::Comparitor)
-                                cluster_slice.check_against(partial_row)
-                              elsif cluster_slice.is_a?(Array)
-                                cluster_slice.all? { |value| value.check_against(partial_row) }
-                              end
-                            end
-                          else
-                            rows
-                          end
-
+                          filtered_rows(cluster_slice, rows)
                         else
                           self.rows
                         end
@@ -284,6 +261,32 @@ module Cassandra
           end
           attributes
         end
+      end
+
+      def filtered_rows(cluster_slice, rows)
+        cluster_slice ? apply_filter(cluster_slice, rows) : rows
+      end
+
+      def apply_filter(cluster_slice, rows)
+        rows.select do |row|
+          partial_row = partial_row(cluster_slice, row)
+
+          if cluster_slice.is_a?(Statement::Comparitor)
+            cluster_slice.check_against(partial_row)
+          elsif cluster_slice.is_a?(Array)
+            cluster_slice.all? { |value| value.check_against(partial_row) }
+          end
+        end
+      end
+
+      def partial_row(cluster_slice, row)
+        comparitor = cluster_slice.is_a?(Statement::Comparitor) ? cluster_slice : cluster_slice.first
+        value = if comparitor.column.is_a?(Array)
+                  row.values_at(*comparitor.column)
+                else
+                  row[comparitor.column]
+                end
+        {comparitor.column => value}
       end
 
       def primary_key_names
