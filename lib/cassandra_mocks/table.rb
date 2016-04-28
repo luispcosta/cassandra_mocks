@@ -25,13 +25,7 @@ module Cassandra
       def rows
         results = []
         @rows.each_pair do |_, row|
-          row_results = row.find_records([]).map do |record|
-            attributes = {}
-            column_names.each.with_index do |column, index|
-              attributes[column] = record[index]
-            end
-            attributes
-          end
+          row_results = record_attributes(row.find_records([]))
           results << row_results
         end
         results.flatten
@@ -269,6 +263,16 @@ module Cassandra
 
       def primary_key_part(row, primary_key_index)
         row[primary_key_names[primary_key_index]]
+      end
+
+      def record_attributes(records)
+        records.map do |record|
+          attributes = {}
+          column_names.each.with_index do |column, index|
+            attributes[column] = record[index]
+          end
+          attributes
+        end
       end
 
       def primary_key_names
