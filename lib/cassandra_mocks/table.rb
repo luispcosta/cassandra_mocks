@@ -71,29 +71,52 @@ module Cassandra
         filter = filter.fetch(:restriction) { {} }
         validate_filter!(filter)
 
-        rows = if filter.any?
-                 partition_key = attribute_partition_key(filter)
-                 partition_range = (partition_key.pop if partition_key.last.is_a?(Array))
-                 cluster_key = filter.except(*partition_key_names).values
-                 if cluster_key.last.is_a?(Statement::Comparitor) || cluster_key.last.is_a?(Array)
-                   cluster_key.pop
-                 end
+        filtered_rows = if filter.any?
+                          partition_key = attribute_partition_key(filter)
+                          partition_range = (partition_key.pop if partition_key.last.is_a?(Array))
+                          cluster_key = filter.except(*partition_key_names).values
+                          cluster_slice = if cluster_key.last.is_a?(Statement::Comparitor) || cluster_key.last.is_a?(Array)
+                                            cluster_key.pop
+                                          end
 
-                 records = if partition_range
-                             partition_range.map do |part|
-                               row = @rows[partition_key + [part]]
-                               row.find_records(cluster_key)
-                             end.flatten(1)
-                           else
-                             row = @rows[partition_key]
-                             row.find_records(cluster_key)
-                           end
-                 record_attributes(records)
-               else
-                 self.rows
-               end
+                          records = if partition_range
+                                      partition_range.map do |part|
+                                        row = @rows[partition_key + [part]]
+                                        row.find_records(cluster_key)
+                                      end.flatten(1)
+                                    else
+                                      row = @rows[partition_key]
+                                      row.find_records(cluster_key)
+                                    end
+                          rows = record_attributes(records)
 
-        filtered_rows = filtered_rows(filter, rows)
+                          if cluster_slice
+                            rows.select do |row|
+                              partial_row = begin
+                                comparitor = cluster_slice.is_a?(Statement::Comparitor) ? cluster_slice : cluster_slice.first
+                                value = if comparitor.column.is_a?(Array)
+                                          row.values_at(*comparitor.column)
+                                        else
+                                          row[comparitor.column]
+                                        end
+                                {comparitor.column => value}
+                              end
+
+
+                              if cluster_slice.is_a?(Statement::Comparitor)
+                                cluster_slice.check_against(partial_row)
+                              elsif cluster_slice.is_a?(Array)
+                                cluster_slice.all? { |value| value.check_against(partial_row) }
+                              end
+                            end
+                          else
+                            rows
+                          end
+
+                        else
+                          self.rows
+                        end
+
         sorted_rows = filtered_rows.sort do |lhs, rhs|
           compare_rows(0, lhs, rhs, order)
         end
@@ -220,40 +243,6 @@ module Cassandra
 
       def filter_has_column?(filter, column)
         filter[column]
-      end
-
-      def filtered_rows(filter, rows)
-        filter ? apply_filter(filter, rows) : rows
-      end
-
-      def apply_filter(filter, rows)
-        rows.select do |row|
-          partial_row = filter_slices_row(filter, row)
-          filter.all? do |column, value|
-            if value.is_a?(Statement::Comparitor)
-              value.check_against(partial_row)
-            elsif value.is_a?(Array)
-              if value.first.is_a?(Statement::Comparitor)
-                value.all? { |value| value.check_against(partial_row) }
-              else
-                value.include?(partial_row[column])
-              end
-            else
-              partial_row[column] == value
-            end
-          end
-        end
-      end
-
-      def filter_slices_row(filter, row)
-        filter.keys.inject({}) do |memo, key, _|
-          value = if key.is_a?(Array)
-                    row.values_at(*key)
-                  else
-                    row[key]
-                  end
-          memo.merge!(key => value)
-        end
       end
 
       def validate_range_query!(filter)
