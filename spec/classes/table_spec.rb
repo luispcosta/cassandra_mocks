@@ -206,6 +206,18 @@ module Cassandra
 
       end
 
+      describe '#clear' do
+        let(:attributes) { {'pk1' => '15', 'ck1' => 'hello world', 'field1' => nil} }
+
+        before { subject.insert(attributes) }
+
+        it 'should remove all records' do
+          subject.clear
+          expect(subject.rows).to be_empty
+        end
+
+      end
+
       describe '#select' do
         let(:attributes) { {'pk1' => 'partition', 'ck1' => 'clustering', 'field1' => 'some extra data'} }
         before { subject.insert(attributes) }

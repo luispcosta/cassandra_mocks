@@ -1,8 +1,9 @@
 module Cassandra
   module Mocks
     class Table < Cassandra::Table
-      include MonitorMixin
-      attr_reader :rows
+      extend Forwardable
+
+      def_delegator :@rows, :clear
 
       def initialize(keyspace, name, partition_key, clustering_key, fields)
         @rows = Concurrent::Map.new { |hash, key| hash[key] = Row.new(key) }
