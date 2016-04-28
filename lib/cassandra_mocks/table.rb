@@ -79,15 +79,7 @@ module Cassandra
                                             cluster_key.pop
                                           end
 
-                          records = if partition_range
-                                      partition_range.map do |part|
-                                        row = @rows[partition_key + [part]]
-                                        row.find_records(cluster_key)
-                                      end.flatten(1)
-                                    else
-                                      row = @rows[partition_key]
-                                      row.find_records(cluster_key)
-                                    end
+                          records = partially_filtered_rows(partition_range, partition_key, cluster_key)
                           rows = record_attributes(records)
                           filtered_rows(cluster_slice, rows)
                         else
@@ -261,6 +253,25 @@ module Cassandra
           end
           attributes
         end
+      end
+
+      def partially_filtered_rows(partition_range, partition_key, cluster_key)
+        if partition_range
+          partition_range_records(partition_range, partition_key, cluster_key)
+        else
+          records_for_row(partition_key, cluster_key)
+        end
+      end
+
+      def partition_range_records(partition_range, partition_key, cluster_key)
+        partition_range.map do |part|
+          records_for_row(partition_key + [part], cluster_key)
+        end.flatten(1)
+      end
+
+      def records_for_row(partition_key, cluster_key)
+        row = @rows[partition_key]
+        row.find_records(cluster_key)
       end
 
       def filtered_rows(cluster_slice, rows)
