@@ -71,7 +71,29 @@ module Cassandra
         filter = filter.fetch(:restriction) { {} }
         validate_filter!(filter)
 
-        filtered_rows = filtered_rows(filter)
+        rows = if filter.any?
+                 partition_key = attribute_partition_key(filter)
+                 partition_range = (partition_key.pop if partition_key.last.is_a?(Array))
+                 cluster_key = filter.except(*partition_key_names).values
+                 if cluster_key.last.is_a?(Statement::Comparitor) || cluster_key.last.is_a?(Array)
+                   cluster_key.pop
+                 end
+
+                 records = if partition_range
+                             partition_range.map do |part|
+                               row = @rows[partition_key + [part]]
+                               row.find_records(cluster_key)
+                             end.flatten(1)
+                           else
+                             row = @rows[partition_key]
+                             row.find_records(cluster_key)
+                           end
+                 record_attributes(records)
+               else
+                 self.rows
+               end
+
+        filtered_rows = filtered_rows(filter, rows)
         sorted_rows = filtered_rows.sort do |lhs, rhs|
           compare_rows(0, lhs, rhs, order)
         end
@@ -200,11 +222,11 @@ module Cassandra
         filter[column]
       end
 
-      def filtered_rows(filter)
-        filter ? apply_filter(filter) : rows
+      def filtered_rows(filter, rows)
+        filter ? apply_filter(filter, rows) : rows
       end
 
-      def apply_filter(filter)
+      def apply_filter(filter, rows)
         rows.select do |row|
           partial_row = filter_slices_row(filter, row)
           filter.all? do |column, value|
