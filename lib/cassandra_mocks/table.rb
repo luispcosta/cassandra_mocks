@@ -131,7 +131,7 @@ module Cassandra
       def validate_filter!(filter)
         unless filter.empty?
           validate_range_query!(filter)
-          validate_partion_key_filter!(filter)
+          validate_partition_key_filter!(filter)
           validate_clustering_column_filter!(filter)
           raise_if_fields_restricted!(filter)
         end
@@ -233,7 +233,7 @@ module Cassandra
         end
       end
 
-      def validate_partion_key_filter!(filter)
+      def validate_partition_key_filter!(filter)
         missing_partition_keys = Set.new(partition_key_names) - filter.keys
         raise Cassandra::Errors::InvalidError.new("Missing partition key part(s) #{missing_partition_keys.map(&:inspect) * ', '}", 'MockStatement') unless missing_partition_keys.empty?
       end
