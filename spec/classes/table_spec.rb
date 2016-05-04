@@ -482,6 +482,13 @@ module Cassandra
               expect(subject.select('*', restriction: {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1'})).to eq(expected_results)
             end
 
+            it 'supports clustering columns specified out of order' do
+              expected_results = [
+                  {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck1' => 'clustering 1', 'ck2' => 'additional clustering 1', 'field1' => nil},
+              ]
+              expect(subject.select('*', restriction: {'pk1' => 'partition 2', 'pk2' => 'additional partition 2', 'ck2' => 'additional clustering 1', 'ck1' => 'clustering 1'})).to eq(expected_results)
+            end
+
             context 'with a comparitor' do
               it 'should return all records for that partition, matching the specified clustering columns' do
                 expected_results = [

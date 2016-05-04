@@ -74,10 +74,11 @@ module Cassandra
         filtered_rows = if filter.any?
                           partition_key = attribute_partition_key(filter)
                           partition_range = (partition_key.pop if partition_key.last.is_a?(Array))
-                          cluster_key = filter.except(*partition_key_names).values
-                          cluster_slice = if cluster_key.last.is_a?(Statement::Comparitor) || cluster_key.last.is_a?(Array)
-                                            cluster_key.pop
-                                          end
+                          cluster_filter = filter.except(*partition_key_names)
+                          cluster_key = attribute_partial_clustering_key(cluster_filter)
+                          cluster_slice = cluster_filter.values.find do |value|
+                            restriction_is_slice?(value)
+                          end
 
                           records = partially_filtered_rows(partition_range, partition_key, cluster_key)
                           rows = record_attributes(records)
@@ -101,7 +102,7 @@ module Cassandra
       def delete(filter)
         validate_filter!(filter)
         row = @rows[attribute_partition_key(filter)]
-        row.delete_records(attribute_clustering_key(filter).compact)
+        row.delete_records(attribute_partial_clustering_key(filter))
       end
 
       def attribute_partition_key(attributes)
@@ -109,11 +110,22 @@ module Cassandra
       end
 
       def attribute_clustering_key(attributes)
-        clustering_key_names.map { |column| attributes[column] }
+        clustering_key_names.map do |column|
+          value = attributes[column]
+          value unless restriction_is_slice?(value)
+        end
+      end
+
+      def attribute_partial_clustering_key(attributes)
+        attribute_clustering_key(attributes).compact
       end
 
       def attribute_fields(attributes)
         field_names.map { |column| attributes[column] }
+      end
+
+      def restriction_is_slice?(value)
+        value.is_a?(Statement::Comparitor) || value.is_a?(Array)
       end
 
       def validate_filter!(filter)
