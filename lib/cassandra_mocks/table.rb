@@ -20,6 +20,10 @@ module Cassandra
         end
 
         super(keyspace, name, partition_key, clustering_key, column_map, options, [])
+        @column_map = columns.inject({}) do |memo, column|
+          memo.merge!(column.name => column)
+        end
+        @partition_key_set = Set.new(partition_key_names)
       end
 
       def rows
@@ -76,7 +80,7 @@ module Cassandra
                           partition_range = (partition_key.pop if partition_key.last.is_a?(Array))
                           cluster_filter = filter.except(*partition_key_names)
                           cluster_key = attribute_partial_clustering_key(cluster_filter)
-                          cluster_slice = cluster_filter.values.find do |value|
+                          _, cluster_slice = cluster_filter.find do |_, value|
                             restriction_is_slice?(value)
                           end
 
@@ -150,6 +154,7 @@ module Cassandra
       private
 
       attr_reader :counter_column
+      def_delegator :@column_map, :[], :find_column
 
       def select_filter(columns)
         columns.last.is_a?(Hash) ? columns.pop.dup : {}
@@ -234,7 +239,7 @@ module Cassandra
       end
 
       def validate_partition_key_filter!(filter)
-        missing_partition_keys = Set.new(partition_key_names) - filter.keys
+        missing_partition_keys = @partition_key_set - filter.keys
         raise Cassandra::Errors::InvalidError.new("Missing partition key part(s) #{missing_partition_keys.map(&:inspect) * ', '}", 'MockStatement') unless missing_partition_keys.empty?
       end
 
@@ -330,10 +335,6 @@ module Cassandra
 
       def field_names
         column_names - (partition_key_names + clustering_key_names)
-      end
-
-      def find_column(name)
-        columns.find { |column| column.name == name }
       end
 
       def column_map(partition_key, clustering_key, fields)
