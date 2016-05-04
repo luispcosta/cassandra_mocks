@@ -3,8 +3,8 @@ module Cassandra
     class Statement
       class Arithmetic < Struct.new(:operation, :column, :amount)
 
-        def apply(row)
-          row.merge(column => (row[column] || 0).public_send(operator, amount))
+        def apply!(row)
+          row.merge!(column => (row[column] || 0).public_send(operator, amount))
         end
 
         private

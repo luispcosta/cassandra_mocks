@@ -116,7 +116,7 @@ module Cassandra
         statement.args[:values].inject(row.dup) do |memo, (column, value)|
           if value.is_a?(Statement::Arithmetic)
             raise Cassandra::Errors::InvalidError.new("Invalid operation (#{column} = #{column} + ?) for non counter column #{column}", 'MockStatement') unless table.counter_table?
-            value.apply(memo)
+            value.apply!(memo)
           else
             memo.merge!(column => value)
           end

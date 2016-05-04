@@ -10,18 +10,18 @@ module Cassandra
 
         subject { Arithmetic.new(operation, column, amount) }
 
-        describe '#apply' do
+        describe '#apply!' do
           let(:row) { {'field1' => 15, 'field2' => 27} }
 
           it 'should return the row with the operation applied on the specified row' do
-            expect(subject.apply(row)).to eq({'field1' => 16, 'field2' => 27})
+            expect(subject.apply!(row)).to eq({'field1' => 16, 'field2' => 27})
           end
 
           context 'with a different column' do
             let(:column) { 'field2' }
 
             it 'should update that column' do
-              expect(subject.apply(row)).to eq({'field1' => 15, 'field2' => 28})
+              expect(subject.apply!(row)).to eq({'field1' => 15, 'field2' => 28})
             end
           end
 
@@ -29,7 +29,7 @@ module Cassandra
             let(:row) { {'field2' => 27} }
 
             it 'should assume a default value of 0' do
-              expect(subject.apply(row)).to eq({'field1' => 1, 'field2' => 27})
+              expect(subject.apply!(row)).to eq({'field1' => 1, 'field2' => 27})
             end
           end
 
@@ -37,7 +37,7 @@ module Cassandra
             let(:amount) { 5 }
 
             it 'should update that column by the specified amount' do
-              expect(subject.apply(row)).to eq({'field1' => 20, 'field2' => 27})
+              expect(subject.apply!(row)).to eq({'field1' => 20, 'field2' => 27})
             end
           end
 
@@ -45,7 +45,7 @@ module Cassandra
             let(:operation) { :minus }
 
             it 'should update that column using the specified operation' do
-              expect(subject.apply(row)).to eq({'field1' => 14, 'field2' => 27})
+              expect(subject.apply!(row)).to eq({'field1' => 14, 'field2' => 27})
             end
           end
         end
