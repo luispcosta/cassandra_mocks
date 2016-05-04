@@ -169,7 +169,7 @@ module Cassandra
           primary_key = [partition_key, *primary_key_parts]
         end
 
-        @args = {table: table_name, check_exists: !!check_exists, columns: additional_columns.merge({column_name => column_type}), primary_key: primary_key}
+        @args = {table: table_name, check_exists: !!check_exists, columns: additional_columns.merge!({column_name => column_type}), primary_key: primary_key}
       end
 
       def parse_truncate_query
