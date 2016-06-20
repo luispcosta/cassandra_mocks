@@ -426,6 +426,11 @@ module Cassandra
             expect(subject.execute_async(query).get).to eq(table.rows)
           end
 
+          it 'should save the query options in the result #execution_info' do
+            options = Faker::Lorem.words.inject({}) { |memo, key| memo.merge!(key => Faker::Lorem.sentence) }
+            expect(subject.execute_async(query, options).get.execution_info).to eq(options)
+          end
+
           context 'with different data in the table' do
             let(:rows) do
               [{'pk1' => 'other partition', 'ck1' => 'clustering', 'field1' => 'extra data'},

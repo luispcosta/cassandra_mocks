@@ -59,6 +59,7 @@ module Cassandra
               cluster.keyspace(keyspace_for_statement(statement)).drop_table(statement.args[:table])
             when :select
               result = select_query(statement)
+              result.execution_info = options
             when :delete
               delete_query(statement)
           end
