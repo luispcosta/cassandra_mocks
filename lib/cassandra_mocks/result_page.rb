@@ -1,6 +1,12 @@
 module Cassandra
   module Mocks
     class ResultPage < Array
+      attr_accessor :execution_info
+
+      def initialize(*args)
+        @execution_info = {}
+        super(*args)
+      end
 
       def last_page?
         true
@@ -14,9 +20,6 @@ module Cassandra
       end
 
       def paging_state
-      end
-
-      def execution_info
       end
 
     end

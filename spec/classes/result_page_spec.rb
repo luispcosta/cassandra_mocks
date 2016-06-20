@@ -26,7 +26,14 @@ module Cassandra
       end
 
       describe '#execution_info' do
-        its(:execution_info) { is_expected.to be_nil }
+        its(:execution_info) { is_expected.to eq({}) }
+
+        context 'when overridden' do
+          let(:execution_info) { Faker::Lorem.words.inject({}) { |memo, key| memo.merge!(key => Faker::Lorem.sentence) } }
+          before { subject.execution_info = execution_info }
+
+          its(:execution_info) { is_expected.to eq(execution_info) }
+        end
       end
 
     end
