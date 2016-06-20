@@ -32,12 +32,15 @@ module Cassandra
           futures = cql.statements.map do |batched_statement|
             execute_async(batched_statement.statement, *batched_statement.args)
           end
-          return Cassandra::Future.all(futures).then { ResultPage.new }
+          return Cassandra::Future.all(futures).then do
+            new_result_page(options)
+          end
         end
 
         future = cql.is_a?(Statement) ? Cassandra::Future.value(cql.fill_params(args)) : prepare_async(cql)
         future.then do |statement|
-          result = ResultPage.new
+          result = new_result_page(options)
+
           # noinspection RubyCaseWithoutElseBlockInspection
           case statement.action
             when :create_keyspace
@@ -80,6 +83,12 @@ module Cassandra
           args.pop
         else
           {arguments: args}
+        end
+      end
+
+      def new_result_page(options)
+        ResultPage.new.tap do |result_page|
+          result_page.execution_info = options
         end
       end
 

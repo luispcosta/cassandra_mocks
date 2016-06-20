@@ -82,8 +82,13 @@ module Cassandra
           expect(subject.execute_async(query)).to be_a_kind_of(Cassandra::Future)
         end
 
-        it 'should resolve to an empty hash' do
+        it 'should resolve to an empty array' do
           expect(subject.execute_async(query).get).to eq([])
+        end
+
+        it 'should save the query options in the result #execution_info' do
+          options = Faker::Lorem.words.inject({}) { |memo, key| memo.merge!(key => Faker::Lorem.sentence) }
+          expect(subject.execute_async(query, options).get.execution_info).to eq(options)
         end
 
         describe 'with a CREATE KEYSPACE query' do
