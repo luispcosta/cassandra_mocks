@@ -466,6 +466,13 @@ module Cassandra
             end
           end
 
+          context 'with a map update' do
+            it 'should parse out the column and the index for the update' do
+              statement = Statement.new("UPDATE table SET field['one'] = 'some value' WHERE pk1 = 771", [])
+              expect(statement.args).to include(values: {ThomasUtils::KeyChild.new('field', 'one') => 'some value'})
+            end
+          end
+
           context 'with a counter update' do
             it 'should parse out the column operation' do
               statement = Statement.new("UPDATE table SET other_field = other_field+1 WHERE pk1 = 'partitioner'", [])

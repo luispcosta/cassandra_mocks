@@ -255,6 +255,14 @@ module Cassandra
           filter_keys << next_filter_key(next_token)
 
           restrictor_token = next_token
+
+          if restrictor_token.lbracket?
+            index = next_token.value
+            next_token
+            filter_keys[-1] = ThomasUtils::KeyChild.new(filter_keys.last, index)
+            restrictor_token = next_token
+          end
+
           if restrictor_token.type == :in
             next_token
             filter_values << parenthesis_values(:rparen)
