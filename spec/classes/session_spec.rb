@@ -677,6 +677,14 @@ module Cassandra
                 expect(table.select('*')).to eq([expected_row])
               end
             end
+
+            context 'when the updated field is not a map' do
+              let(:field_type) { 'int' }
+
+              xit 'should raise and InvalidError' do
+                expect { subject.execute_async(query).get }.to raise_error(Cassandra::Errors::InvalidError, "Invalid operation (field1['hello'] = 'johnny') for non map column field1")
+              end
+            end
           end
         end
 
