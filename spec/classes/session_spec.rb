@@ -655,6 +655,29 @@ module Cassandra
               end
             end
           end
+
+          context 'when the update sets the key of a map' do
+            let(:field_type) { 'map<string,string>' }
+            let(:columns) { {'pk1' => 'text', 'ck1' => 'text', 'field1' => field_type} }
+            let(:row) { {'pk1' => 'books', 'ck1' => 'mystery', 'field1' => nil} }
+            let(:query) { "UPDATE #{table_name} SET field1['hello'] = 'johnny' WHERE pk1 = 'books'" }
+
+            it 'should set the value of the key-value pair in the map' do
+              subject.execute_async(query).get
+              expected_row = row.merge('field1' => {'hello' => 'johnny'})
+              expect(table.select('*')).to eq([expected_row])
+            end
+
+            context 'when a map already exists for this column' do
+              let(:row) { {'pk1' => 'books', 'ck1' => 'mystery', 'field1' => {'goodbye' => 'world'}} }
+
+              it 'should set the value of the key-value pair in the map' do
+                subject.execute_async(query).get
+                expected_row = row.merge('field1' => {'hello' => 'johnny', 'goodbye' => 'world'})
+                expect(table.select('*')).to eq([expected_row])
+              end
+            end
+          end
         end
 
         context 'with a DELETE query' do

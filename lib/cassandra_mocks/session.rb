@@ -127,6 +127,10 @@ module Cassandra
           if value.is_a?(Statement::Arithmetic)
             raise Cassandra::Errors::InvalidError.new("Invalid operation (#{column} = #{column} + ?) for non counter column #{column}", 'MockStatement') unless table.counter_table?
             value.apply!(memo)
+          elsif column.is_a?(ThomasUtils::KeyChild)
+            map = (memo[column.key] ||= {})
+            map[column.child] = value
+            memo
           else
             memo.merge!(column => value)
           end
