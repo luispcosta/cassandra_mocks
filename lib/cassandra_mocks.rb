@@ -18,6 +18,7 @@ require 'concurrent'
 require 'cassandra'
 require 'active_support/all'
 require 'active_support/core_ext/class/attribute_accessors'
+require 'thomas_utils'
 
 require 'cassandra_mocks/result_page'
 require 'cassandra_mocks/record'

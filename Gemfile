@@ -4,6 +4,7 @@ gemspec
 
 group :development do
   gem 'rdoc'
+  gem 'thomas_utils', github: 'thomasrogers03/thomas_utils'
 end
 
 group :test do
