@@ -203,6 +203,25 @@ module Cassandra
             end
           end
 
+          describe 'map/array indexing' do
+            let(:statement) { "UPDATE some_table SET column['field'] = 'value'" }
+
+            it 'should split the statement into tokens' do
+              expected_tokens = [
+                  {update: 'UPDATE'},
+                  {id: 'some_table'},
+                  {set: 'SET'},
+                  {id: 'column'},
+                  {lbracket: '['},
+                  {string: 'field'},
+                  {rbracket: ']'},
+                  {eql: '='},
+                  {string: 'value'},
+              ]
+              expect(subject.tokens).to eq(tokenize_expected expected_tokens)
+            end
+          end
+
         end
 
         describe '#token_queue' do
