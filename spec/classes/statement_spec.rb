@@ -716,12 +716,20 @@ module Cassandra
 
       describe '#bind' do
         let(:args) { %w(nothing something) }
+        let(:result_args) { args }
         let(:original_statement) { Statement.new('DELETE FROM everything WHERE something = ? AND nothing = ?', []) }
-        let(:expected_statement) { original_statement.fill_params(args) }
+        let(:expected_statement) { original_statement.fill_params(result_args) }
 
         subject { original_statement.bind(*args) }
 
         it { is_expected.to eq(expected_statement) }
+
+        context 'when called with the newer interface (an array)' do
+          let(:args) { [result_args] }
+          let(:result_args) { Faker::Lorem.words }
+          it { is_expected.to eq(expected_statement) }
+        end
+
       end
 
     end

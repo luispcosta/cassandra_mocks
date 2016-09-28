@@ -59,6 +59,7 @@ module Cassandra
       end
 
       def bind(*args)
+        args = args.first if args.first.is_a?(Array)
         fill_params(args)
       end
 

@@ -9,7 +9,7 @@ GIT
 PATH
   remote: .
   specs:
-    cassandra_mocks (1.0.9)
+    cassandra_mocks (1.0.10)
       activesupport (~> 4.0)
       cassandra-driver (~> 2.0.0)
       concurrent-ruby (~> 1.0.0)
