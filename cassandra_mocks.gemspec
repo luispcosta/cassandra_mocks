@@ -11,7 +11,7 @@ and accurate representation of running CQL 3 against the Ruby Cassandra driver}
   s.files = Dir['{lib}/**/*.rb', 'bin/*', 'LICENSE.txt', '*.md']
   s.require_path = 'lib'
   s.homepage = 'https://www.github.com/thomasrogers03/cassandra_mocks'
-  s.add_runtime_dependency 'cassandra-driver', '>= 1.1', '<= 2.0.1'
+  s.add_runtime_dependency 'cassandra-driver', '~> 2.0.0'
   s.add_runtime_dependency 'concurrent-ruby', '~> 1.0.0'
   s.add_runtime_dependency 'activesupport', '~> 4.0'
   s.add_runtime_dependency 'thomas_utils', '>= 0.2.5', '<= 0.3'
